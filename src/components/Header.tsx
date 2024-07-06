@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import MobileNav from "@/components/MobileNav.tsx";
 
 const Header = () => {
   return (
@@ -7,6 +8,9 @@ const Header = () => {
           <Link className="text-3xl font-bold tracking-tight text-orange-500" to="/">
             QUICKBITE
           </Link>
+          <div className="block md:hidden">
+            <MobileNav/>
+          </div>
         </div>
       </div>
   );

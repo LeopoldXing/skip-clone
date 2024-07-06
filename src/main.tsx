@@ -1,7 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import './global.css'
-import {BrowserRouter} from "react-router-dom";
+import { BrowserRouter } from "react-router-dom";
 import AppRoutes from "@/AppRoutes.tsx";
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
