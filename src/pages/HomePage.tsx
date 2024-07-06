@@ -14,7 +14,9 @@ const HomePage = () => {
           <img src={landingImage} alt="Landing Image"/>
           <div className="flex flex-col gap-5 justify-center items-center text-center">
             <span className="font-bold text-3xl tracking-tighter">Order takeaway even faster!</span>
-            <span className="text-md text-gray-600">Download the Quick Bite App today and get better experience with personalised recommendations</span>
+            <span className="text-md text-gray-600">
+              Download the Quick Bite App today and get better experience with personalised recommendations
+            </span>
             <img src={appDownloadImage} alt="appDownloadImage"/>
           </div>
         </div>
