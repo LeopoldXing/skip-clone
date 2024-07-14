@@ -3,14 +3,17 @@ import Header from "@/components/Header.tsx";
 import Hero from "@/components/Hero.tsx";
 import Footer from "@/components/Footer.tsx";
 
-const Layout = ({ children }: { children: React.ReactElement }) => {
+type Props = {
+  children: React.ReactNode;
+  showHero?: boolean;
+};
+
+const Layout = ({ children, showHero = false }: Props) => {
   return (
-      <div className="min-h-screen flex flex-col">
+      <div className="flex flex-col min-h-screen">
         <Header/>
-        <Hero/>
-        <div className="mx-auto py-10 container flex-1">
-          {children}
-        </div>
+        {showHero && <Hero/>}
+        <div className="container mx-auto flex-1 py-10">{children}</div>
         <Footer/>
       </div>
   );
