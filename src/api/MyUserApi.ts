@@ -1,8 +1,39 @@
-import { useMutation } from "react-query";
+import { useMutation, useQuery } from "react-query";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const useGetMyUser = () => {
+  const { getAccessTokenSilently } = useAuth0();
+
+  const getMyUserRequest = async (): Promise<User> => {
+    const accessToken = await getAccessTokenSilently();
+    console.log("发送查询用户请求：")
+    console.log(accessToken)
+    const response = await fetch(`${BASE_URL}/api/my/user`, {
+      method: "GET",
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to get user info");
+    } else {
+      return await response.json();
+    }
+  }
+
+  const { data: currentUser, isLoading, error } = useQuery('fetchCurrentUser', getMyUserRequest);
+
+  if (error) {
+    toast.error(error.toString());
+  }
+
+  return { currentUser, isLoading };
+}
 
 type CreateUserRequest = {
   auth0Id: string;
@@ -64,6 +95,7 @@ const useUpdateMyUser = () => {
   if (isSuccess) {
     toast.success("User profile updated!");
   } else if (isError) {
+    // @ts-ignore
     toast.error(`Failed to update: ${error.toString()}`);
     reset();
   }
@@ -71,4 +103,4 @@ const useUpdateMyUser = () => {
   return { updateUser, isLoading, isError, isSuccess };
 }
 
-export { useCreateMyUser, useUpdateMyUser };
+export { useCreateMyUser, useUpdateMyUser, useGetMyUser };
