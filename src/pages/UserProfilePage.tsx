@@ -5,12 +5,12 @@ const UserProfilePage = () => {
   const { currentUser, isLoading: isGettingUser } = useGetMyUser();
   const { updateUser, isLoading: isUpdatingUser } = useUpdateMyUser();
 
-  if (isGettingUser) {
+  if (!currentUser) {
     return <span>Loading...</span>
   }
 
   return (
-      <UserProfileForm onSave={updateUser} isLoading={isUpdatingUser}/>
+      <UserProfileForm onSave={updateUser} isLoading={isUpdatingUser} currentUser={currentUser} />
   );
 };
 

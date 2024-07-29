@@ -1,18 +1,11 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
 import { Input } from "@/components/ui/input.tsx";
 import LoadingButton from "@/components/ui/LoadingButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   email: z.string().optional(),
@@ -26,13 +19,20 @@ export type UserFormData = z.infer<typeof formSchema>;
 
 type UserProfileFormProps = {
   onSave: (userProfileData: UserFormData) => void,
-  isLoading: boolean
+  isLoading: boolean,
+  currentUser: User
 }
 
-const UserProfileForm = ({ onSave, isLoading }: UserProfileFormProps) => {
+const UserProfileForm = ({ onSave, isLoading, currentUser }: UserProfileFormProps) => {
   const form = useForm<UserFormData>({
     resolver: zodResolver(formSchema),
-  })
+    defaultValues: currentUser
+  });
+
+  useEffect(() => {
+    form.reset(currentUser);
+  }, [currentUser, form]);
+
   return (
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSave)} className="space-y-4 bg-gray-50 rounded-lg md:p-10">
