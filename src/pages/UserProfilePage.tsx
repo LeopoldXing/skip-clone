@@ -2,7 +2,7 @@ import UserProfileForm from "@/forms/user-profile-form/UserProfileForm.tsx";
 import { useGetMyUser, useUpdateMyUser } from "@/api/MyUserApi.ts";
 
 const UserProfilePage = () => {
-  const { currentUser, isLoading: isGettingUser } = useGetMyUser();
+  const { currentUser } = useGetMyUser();
   const { updateUser, isLoading: isUpdatingUser } = useUpdateMyUser();
 
   if (!currentUser) {
@@ -10,7 +10,7 @@ const UserProfilePage = () => {
   }
 
   return (
-      <UserProfileForm onSave={updateUser} isLoading={isUpdatingUser} currentUser={currentUser} />
+      <UserProfileForm onSave={updateUser} isLoading={isUpdatingUser} currentUser={currentUser}/>
   );
 };
 
