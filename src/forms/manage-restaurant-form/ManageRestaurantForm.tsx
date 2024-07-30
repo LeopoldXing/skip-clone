@@ -3,6 +3,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form.tsx";
 import DetailsSection from "@/forms/manage-restaurant-form/DetailsSection.tsx";
+import { Separator } from "@/components/ui/separator.tsx";
+import CuisinesSection from "@/forms/manage-restaurant-form/CuisinesSection.tsx";
+import MenuSection from "@/forms/manage-restaurant-form/MenuSection.tsx";
+import ImageSection from "@/forms/manage-restaurant-form/ImageSection.tsx";
+import LoadingButton from "@/components/ui/LoadingButton.tsx";
+import { Button } from "@/components/ui/button.tsx";
 
 const formSchema = z.object({
   restaurantName: z.string({
@@ -16,11 +22,11 @@ const formSchema = z.object({
   }),
   deliveryPrice: z.coerce.number({
     required_error: "DeliveryPrice is required",
-    invalid_type_error: "DeliveryPrice must be a valid number"
+    invalid_type_error: "must be a valid number"
   }),
   estimatedDeliveryTime: z.coerce.number({
     required_error: "Estimated delivery time is required",
-    invalid_type_error: "Estimated delivery time must be a valid number"
+    invalid_type_error: "must be a valid number"
   }),
   cuisines: z.array(z.string()).nonempty({
     message: "Please select at least one item"
@@ -54,6 +60,14 @@ const ManageRestaurantForm = ({ onSave, isLoading = false }: ManageRestaurantFor
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-10 bg-gray-50 rounded-lg">
           <DetailsSection/>
+          <Separator/>
+          <CuisinesSection/>
+          <Separator/>
+          <MenuSection/>
+          <Separator/>
+          <ImageSection/>
+
+          {isLoading ? <LoadingButton/> : <Button type="submit">Submit</Button>}
         </form>
       </Form>
   );

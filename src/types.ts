@@ -1,4 +1,4 @@
-type User = {
+export type User = {
   _id: string;
   name: string;
   email: string;
@@ -6,3 +6,10 @@ type User = {
   city: string;
   country: string;
 }
+
+export type OrderStatus =
+    | "placed"
+    | "paid"
+    | "inProgress"
+    | "outForDelivery"
+    | "delivered";
