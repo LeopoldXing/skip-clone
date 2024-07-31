@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "react-query";
 import { useAuth0 } from "@auth0/auth0-react";
 import { toast } from "sonner";
+import { User } from "@/types.ts";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -9,8 +10,6 @@ const useGetMyUser = () => {
 
   const getMyUserRequest = async (): Promise<User> => {
     const accessToken = await getAccessTokenSilently();
-    console.log("发送查询用户请求：")
-    console.log(accessToken)
     const response = await fetch(`${BASE_URL}/api/my/user`, {
       method: "GET",
       headers: {
@@ -95,7 +94,8 @@ const useUpdateMyUser = () => {
   if (isSuccess) {
     toast.success("User profile updated!");
   } else if (isError) {
-    // @ts-ignore
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error
     toast.error(`Failed to update: ${error.toString()}`);
     reset();
   }

@@ -1,0 +1,37 @@
+import { useAuth0 } from "@auth0/auth0-react";
+import { useMutation } from "react-query";
+import { toast } from "sonner";
+
+const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+const useCreateMyRestaurant = () => {
+  const { getAccessTokenSilently } = useAuth0();
+
+  const createMyRestaurantRequest = async (restaurantFormData: FormData) => {
+    const accessToken = await getAccessTokenSilently();
+
+    const response = await fetch(`${BASE_URL}/api/my/restaurants`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`
+      },
+      body: restaurantFormData
+    });
+    if (!response.ok) {
+      throw new Error("Failed to create restaurant");
+    }
+    return response.json();
+  }
+
+  const { mutateAsync: createRestaurant, isLoading, isSuccess, isError } = useMutation(createMyRestaurantRequest);
+  if (isError) {
+    toast.error("Failed to create restaurant");
+  }
+  if (isSuccess) {
+    toast.success("Restaurant created successfully!");
+  }
+
+  return { createRestaurant, isLoading };
+}
+
+export { useCreateMyRestaurant };
