@@ -10,7 +10,7 @@ const useCreateMyRestaurant = () => {
   const createMyRestaurantRequest = async (restaurantFormData: FormData) => {
     const accessToken = await getAccessTokenSilently();
 
-    const response = await fetch(`${BASE_URL}/api/my/restaurants`, {
+    const response = await fetch(`${BASE_URL}/api/my/restaurant`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${accessToken}`
