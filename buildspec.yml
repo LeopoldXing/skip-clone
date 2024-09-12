@@ -8,4 +8,4 @@ phases:
       - npm run build
   post_build:
     commands:
-      - aws s3 sync build/ s3://your-frontend-bucket --delete
+      - aws s3 sync build/ s3://quick-bite/code/ --delete
