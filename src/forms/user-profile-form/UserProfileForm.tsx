@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input.tsx";
 import LoadingButton from "@/components/ui/LoadingButton.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { useEffect } from "react";
+import {User} from "@/types.ts";
 
 const formSchema = z.object({
   email: z.string().optional(),
