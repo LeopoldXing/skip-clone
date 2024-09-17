@@ -66,8 +66,8 @@ const ManageRestaurantForm = ({ onSave, isLoading = false }: ManageRestaurantFor
       formData.append(`cuisines[${index}]`, cuisine);
     });
     formDataJson.menuItems.forEach((menuItem, index) => {
-      formData.append(`menuItem[${index}][name]`, menuItem.name);
-      formData.append(`menuItem[${index}][price]`, (menuItem.price * 100).toString());
+      formData.append(`menuItems[${index}][name]`, menuItem.name);
+      formData.append(`menuItems[${index}][price]`, (menuItem.price * 100).toString());
     });
     if (formDataJson.imageFile) {
       formData.append('imageFile', formDataJson.imageFile);
