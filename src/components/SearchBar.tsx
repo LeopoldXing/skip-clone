@@ -37,12 +37,12 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}
                 className={`w-full md:max-w-[77%] flex items-center gap-3 justify-between flex-row border-2 rounded-full p-3 ${form.formState.errors.keyword && "border-red-500"}`}>
-            <div className="flex justify-between items-center">
-              <Search strokeWidth={2.5} size={30} className="mx-1 text-orange-500 hidden md:block"/>
+            <div className="flex justify-start items-center gap-1">
+              <Search strokeWidth={2.5} size={30} className="ml-1 text-orange-500 hidden md:block"/>
               <FormField control={form.control} name='keyword' render={({ field }) => (
                   <FormItem>
                     <FormControl>
-                      <Input {...field} className="border-none shadow-none text-xl focus-visible:ring-0" placeholder={placeholder}/>
+                      <Input {...field} className="w-full border-none shadow-none text-xl focus-visible:ring-0" placeholder={placeholder}/>
                     </FormControl>
                   </FormItem>
               )}/>

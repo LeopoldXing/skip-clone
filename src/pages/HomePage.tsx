@@ -7,7 +7,6 @@ const HomePage = () => {
   const navigate = useNavigate();
 
   const handleSearch = (param: SearchForm) => {
-    console.log(`keyword: ${param.keyword}`);
     navigate({
       pathname: `/search/${param.keyword}`
     })
