@@ -1,7 +1,18 @@
 import landingImage from "../assets/landing.png";
 import appDownloadImage from "../assets/appDownload.png";
+import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
+import { useNavigate } from "react-router-dom";
 
 const HomePage = () => {
+  const navigate = useNavigate();
+
+  const handleSearch = (param: SearchForm) => {
+    console.log(`keyword: ${param.keyword}`);
+    navigate({
+      pathname: `/search/${param.keyword}`
+    })
+  }
+
   return (
       <div className="flex flex-col gap-12">
         <div className="py-8 -mt-16 flex flex-col gap-5 text-center bg-white rounded-lg shadow-md">
@@ -9,6 +20,7 @@ const HomePage = () => {
             Tuck into a takeaway today
           </h1>
           <span className="text-xl">Food is just a click away!</span>
+          <SearchBar placeholder='Search by city or town' onSubmit={handleSearch}/>
         </div>
         <div className="grid md:grid-cols-2 gap-5">
           <img src={landingImage} alt="Landing Image"/>
