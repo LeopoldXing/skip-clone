@@ -1,9 +1,12 @@
 import { useFormContext } from "react-hook-form";
 import { FormControl, FormDescription, FormField, FormItem, FormMessage } from "@/components/ui/form.tsx";
 import { Input } from "@/components/ui/input.tsx";
+import { AspectRatio } from "@/components/ui/aspect-ratio.tsx";
 
 const ImageSection = () => {
-  const { control } = useFormContext();
+  const { control, watch } = useFormContext();
+
+  const existingImageUrl = watch("imageUrl");
 
   return (
       <div className="space-y-2">
@@ -14,7 +17,12 @@ const ImageSection = () => {
             will overwrite the existing one.
           </FormDescription>
         </div>
-        <div className="flex flex-col gap-8 w-[50%]">
+        <div className="flex flex-col gap-8 md:w-[50%]">
+          {existingImageUrl && (
+              <AspectRatio ratio={16 / 9}>
+                <img src={existingImageUrl} alt="restaurant image" className="w-full h-full rounded-md object-cover"/>
+              </AspectRatio>
+          )}
           <FormField control={control} name="imageFile" render={({ field }) => (
               <FormItem>
                 <FormControl>

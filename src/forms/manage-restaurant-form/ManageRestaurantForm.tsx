@@ -73,7 +73,7 @@ const ManageRestaurantForm = ({ onSave, isLoading = false, defaultValue: default
 
       form.reset(updatedRestaurant);
     }
-  }, []);
+  }, [defaultRestaurant, form]);
 
   const onSubmit = (formDataJson: RestaurantFormData) => {
     const formData = new FormData();
