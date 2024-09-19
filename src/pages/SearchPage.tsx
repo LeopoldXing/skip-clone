@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useSearchRestaurant } from '../api/RestaurantApi.ts'
 import SearchResultOverview from "@/components/SearchResultOverview.tsx";
+import SearchResultCard from "@/components/SearchResultCard.tsx";
 
 export type Conditions = {
   keyword: string;
@@ -27,9 +28,11 @@ const SearchPage = () => {
         <div id="main-content" className="flex flex-col gap-5">
           <div className="flex justify-between flex-col gap-3 lg:flex-row">
             <SearchResultOverview total={restaurantOverviewList.pagination.total} city={city}/>
+            Insert sorting dropdown
           </div>
+          {/*  search result info  */}
+          {restaurantOverviewList?.data.map(restaurant => (<SearchResultCard restaurant={restaurant}/>))}
         </div>
-        {/*  search result info  */}
       </div>
   );
 };
