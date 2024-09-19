@@ -2,6 +2,8 @@ import { useParams } from "react-router-dom";
 import { useSearchRestaurant } from '../api/RestaurantApi.ts'
 import SearchResultOverview from "@/components/SearchResultOverview.tsx";
 import SearchResultCard from "@/components/SearchResultCard.tsx";
+import { useState } from "react";
+import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
 
 export type Conditions = {
   keyword: string;
@@ -12,7 +14,32 @@ export type Conditions = {
 
 const SearchPage = () => {
   const { city } = useParams();
-  const { restaurantOverviewList, isLoading } = useSearchRestaurant(city);
+  const [conditions, setConditions] = useState<Conditions>({
+    keyword: '',
+    page: 1,
+    selectedCuisines: [],
+    sortOption: 'bestMatch',
+  });
+  const { restaurantOverviewList, isLoading } = useSearchRestaurant(conditions, city);
+
+  /**
+   * reset the form
+   */
+  const resetSearchForm = () => {
+    setConditions((prevState) => ({
+      ...prevState,
+      keyword: "",
+      page: 1,
+    }));
+  }
+
+  /**
+   * submit the form
+   * @param formData
+   */
+  const handleSubmit = (formData: SearchForm) => {
+    setConditions(prevState => ({ ...prevState, keyword: formData.keyword, page: 1 }))
+  }
 
   if (isLoading) return '<span>Loading...</span>';
 
@@ -26,6 +53,11 @@ const SearchPage = () => {
         </div>
         {/*  main content  */}
         <div id="main-content" className="flex flex-col gap-5">
+          {/*  search bar  */}
+          <SearchBar keyword={conditions.keyword}
+                     onSubmit={handleSubmit}
+                     placeholder="Search by Cuisine or Restaurant Name"
+                     onReset={resetSearchForm}/>
           <div className="flex justify-between flex-col gap-3 lg:flex-row">
             <SearchResultOverview total={restaurantOverviewList.pagination.total} city={city}/>
             Insert sorting dropdown
