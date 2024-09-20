@@ -5,6 +5,7 @@ import SearchResultCard from "@/components/SearchResultCard.tsx";
 import { useState } from "react";
 import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
 import PaginationSelector from "@/components/PaginationSelector.tsx";
+import CuisineFilter from "@/components/CuisineFilter.tsx";
 
 export type Conditions = {
   keyword: string;
@@ -49,6 +50,16 @@ const SearchPage = () => {
     setConditions(prevState => ({ ...prevState, page: number }))
   }
 
+  const handleCuisineSelect = (selectedCuisines: string[]) => {
+    setConditions((prevState) => ({
+      ...prevState,
+      selectedCuisines,
+      page: 1,
+    }));
+  };
+
+  const [isExpanded, setIsExpanded] = useState(false);
+
   if (isLoading) return '<span>Loading...</span>';
 
   if (!restaurantOverviewList?.data || !city) return '<span>No restaurants found</span>';
@@ -57,7 +68,8 @@ const SearchPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-5">
         {/*  cuisine list  */}
         <div id="cuisines-list">
-          Insert cuisine here
+          <CuisineFilter onChange={handleCuisineSelect} selectedCuisines={conditions.selectedCuisines} isExpanded={isExpanded}
+                         onExpandClick={() => setIsExpanded((prevIsExpanded) => !prevIsExpanded)}/>
         </div>
         {/*  main content  */}
         <div id="main-content" className="flex flex-col gap-5">
