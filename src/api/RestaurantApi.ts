@@ -1,8 +1,36 @@
-import { RestaurantSearchOverview } from "@/types.ts";
+import { Restaurant, RestaurantSearchOverview } from "@/types.ts";
 import { useQuery } from "react-query";
 import { Conditions } from "@/pages/SearchPage.tsx";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+/**
+ * get restaurant details
+ * @param restaurantId
+ */
+const useGetRestaurant = (restaurantId?: string) => {
+  const getRestaurantByIdRequest = async (): Promise<Restaurant> => {
+    const response = await fetch(
+        `${BASE_URL}/api/restaurant/${restaurantId}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to get restaurant");
+    }
+
+    return response.json();
+  };
+
+  const { data: restaurant, isLoading } = useQuery(
+      "fetchRestaurant",
+      getRestaurantByIdRequest,
+      {
+        enabled: !!restaurantId,
+      }
+  );
+
+  return { restaurant, isLoading };
+};
 
 /**
  * search restaurant hook
@@ -36,4 +64,4 @@ const useSearchRestaurant = (conditions: Conditions, city?: string) => {
   return { restaurantOverviewList, isLoading };
 }
 
-export { useSearchRestaurant };
+export { useSearchRestaurant, useGetRestaurant };
