@@ -6,6 +6,7 @@ import { useState } from "react";
 import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
 import PaginationSelector from "@/components/PaginationSelector.tsx";
 import CuisineFilter from "@/components/CuisineFilter.tsx";
+import SortOptionDropdown from "@/components/SortOptionDropDown.tsx";
 
 export type Conditions = {
   keyword: string;
@@ -80,7 +81,9 @@ const SearchPage = () => {
                      onReset={resetSearchForm}/>
           <div className="flex justify-between flex-col gap-3 lg:flex-row">
             <SearchResultOverview total={restaurantOverviewList.pagination.total} city={city}/>
-            Insert sorting dropdown
+            <SortOptionDropdown
+                sortOption={conditions.sortOption}
+                onChange={value => setConditions(prevState => ({ ...prevState, sortOption: value }))}/>
           </div>
           {/*  search result info  */}
           {restaurantOverviewList?.data.map(restaurant => (<SearchResultCard restaurant={restaurant}/>))}
