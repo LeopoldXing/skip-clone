@@ -4,6 +4,7 @@ import SearchResultOverview from "@/components/SearchResultOverview.tsx";
 import SearchResultCard from "@/components/SearchResultCard.tsx";
 import { useState } from "react";
 import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
+import PaginationSelector from "@/components/PaginationSelector.tsx";
 
 export type Conditions = {
   keyword: string;
@@ -41,6 +42,13 @@ const SearchPage = () => {
     setConditions(prevState => ({ ...prevState, keyword: formData.keyword, page: 1 }))
   }
 
+  /**
+   * pagination, change page
+   */
+  const handlePageChange = (number: number) => {
+    setConditions(prevState => ({ ...prevState, page: number }))
+  }
+
   if (isLoading) return '<span>Loading...</span>';
 
   if (!restaurantOverviewList?.data || !city) return '<span>No restaurants found</span>';
@@ -64,6 +72,9 @@ const SearchPage = () => {
           </div>
           {/*  search result info  */}
           {restaurantOverviewList?.data.map(restaurant => (<SearchResultCard restaurant={restaurant}/>))}
+          {/*  pagination  */}
+          <PaginationSelector current={restaurantOverviewList.pagination.page} size={10} total={restaurantOverviewList.pagination.total}
+                              onPageChange={handlePageChange}/>
         </div>
       </div>
   );
