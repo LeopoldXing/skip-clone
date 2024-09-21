@@ -41,7 +41,8 @@ const useGetMyOrders = () => {
 
   const { data: myOrders, isLoading } = useQuery(
       'fetchMyOrders',
-      getMyOrdersRequest
+      getMyOrdersRequest,
+      { refetchInterval: 5000 }
   );
 
   return { myOrders, isLoading };
