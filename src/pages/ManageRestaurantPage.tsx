@@ -2,8 +2,13 @@ import ManageRestaurantForm from "@/forms/manage-restaurant-form/ManageRestauran
 import { useCreateMyRestaurant, useGetMyRestaurant, useGetMyRestaurantOrders, useUpdateMyRestaurant } from "@/api/MyRestaurantApi.ts";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
 import OrderItemCard from "@/components/OrderItemCard.tsx";
+import { useEffect } from "react";
 
 const ManageRestaurantPage = () => {
+  useEffect(() => {
+    document.title = 'Restaurant Management'
+  }, []);
+
   const { createRestaurant, isLoading: isCreatingRestaurant } = useCreateMyRestaurant();
   const { restaurant } = useGetMyRestaurant();
   const { updateRestaurant, isLoading: isUpdatingRestaurant } = useUpdateMyRestaurant();

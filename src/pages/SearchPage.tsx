@@ -2,7 +2,7 @@ import { useParams } from "react-router-dom";
 import { useSearchRestaurant } from '../api/RestaurantApi.ts'
 import SearchResultOverview from "@/components/SearchResultOverview.tsx";
 import SearchResultCard from "@/components/SearchResultCard.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
 import PaginationSelector from "@/components/PaginationSelector.tsx";
 import CuisineFilter from "@/components/CuisineFilter.tsx";
@@ -16,6 +16,10 @@ export type Conditions = {
 };
 
 const SearchPage = () => {
+  useEffect(() => {
+    document.title = 'Search Restaurants'
+  }, []);
+
   const { city } = useParams();
   const [conditions, setConditions] = useState<Conditions>({
     keyword: '',

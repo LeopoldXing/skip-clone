@@ -4,7 +4,7 @@ import { UserFormData } from "@/forms/user-profile-form/UserProfileForm.tsx";
 import { AspectRatio } from "@/components/ui/aspect-ratio.tsx";
 import { Card, CardFooter } from "@/components/ui/card.tsx";
 import RestaurantInfoCard from "@/components/RestaurantInfoCard.tsx";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MenuItemType } from "@/types.ts";
 import MenuItem from "@/components/MenuItem.tsx";
 import OrderSummary from "@/components/OrderSummary.tsx";
@@ -19,6 +19,10 @@ export type CartItem = {
 };
 
 const RestaurantDetailPage = () => {
+  useEffect(() => {
+    document.title = 'Restaurant Details'
+  }, []);
+
   const { restaurantId } = useParams();
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
   const { createCheckoutSession, isLoading: isCreatingCheckoutSession } = useCreateCheckoutSession();

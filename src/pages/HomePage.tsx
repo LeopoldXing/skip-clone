@@ -2,8 +2,12 @@ import landingImage from "../assets/landing.png";
 import appDownloadImage from "../assets/appDownload.png";
 import SearchBar, { SearchForm } from "@/components/SearchBar.tsx";
 import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 
 const HomePage = () => {
+  useEffect(() => {
+    document.title = 'Quickbite'
+  }, []);
   const navigate = useNavigate();
 
   const handleSearch = (param: SearchForm) => {

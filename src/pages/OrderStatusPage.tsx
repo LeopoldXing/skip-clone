@@ -2,8 +2,13 @@ import { useGetMyOrders } from "@/api/OrderApi.ts";
 import { AspectRatio } from "@/components/ui/aspect-ratio.tsx";
 import OrderStatusHeader from "@/components/OrderStatusHeader.tsx";
 import OrderStatusDetail from "@/components/OrderStatusDetail.tsx";
+import { useEffect } from "react";
 
 const OrderStatusPage = () => {
+  useEffect(() => {
+    document.title = 'My Orders'
+  }, []);
+
   const { myOrders, isLoading } = useGetMyOrders();
 
   if (isLoading) {
