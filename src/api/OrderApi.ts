@@ -48,7 +48,7 @@ const useGetMyOrders = () => {
 }
 
 /**
- * custom hook to create checkout session
+ * create checkout session
  */
 const useCreateCheckoutSession = () => {
   const { getAccessTokenSilently } = useAuth0();
