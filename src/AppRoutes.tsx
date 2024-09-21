@@ -7,6 +7,7 @@ import ProtectedRoutes from "@/auth/ProtectedRoutes.tsx";
 import ManageRestaurantPage from "@/pages/ManageRestaurantPage.tsx";
 import SearchPage from "@/pages/SearchPage.tsx";
 import RestaurantDetailPage from "@/pages/RestaurantDetailPage.tsx";
+import OrderStatusPage from "@/pages/OrderStatusPage.tsx";
 
 const AppRoutes = () => {
   return (
@@ -18,6 +19,7 @@ const AppRoutes = () => {
         <Route element={<ProtectedRoutes/>}>
           <Route path="/user-profile" element={<Layout><UserProfilePage/></Layout>}/>
           <Route path="/manage-restaurant" element={<Layout><ManageRestaurantPage/></Layout>}/>
+          <Route path='/order-status' element={<Layout><OrderStatusPage/></Layout>}/>
         </Route>
         <Route path="*" element={<Navigate to={"/"}/>}/>
       </Routes>

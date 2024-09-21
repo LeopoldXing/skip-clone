@@ -61,9 +61,9 @@ const SearchPage = () => {
 
   const [isExpanded, setIsExpanded] = useState(false);
 
-  if (isLoading) return '<span>Loading...</span>';
+  if (isLoading) return 'Loading...';
 
-  if (!restaurantOverviewList?.data || !city) return '<span>No restaurants found</span>';
+  if (!restaurantOverviewList?.data || !city) return 'No restaurants found';
 
   return (
       <div className="grid grid-cols-1 lg:grid-cols-[250px_1fr] gap-5">

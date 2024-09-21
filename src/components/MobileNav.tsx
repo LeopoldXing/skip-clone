@@ -20,14 +20,17 @@ const MobileNav = () => {
                   <CircleUserRound className="text-orange-500"/>
                   {user?.email}
                 </span>
-            ) : (<span>Welcome to Quick Bite</span>)}
+            ) : (
+                <span>Welcome to Quick Bite</span>
+            )}
           </SheetTitle>
           <Separator/>
           <SheetDescription className="flex flex-col gap-4">
-            {isAuthenticated ?
-                <MobileNavLinks/> :
+            {isAuthenticated ? (
+                <MobileNavLinks/>
+            ) : (
                 <Button className="flex-1 font-bold bg-orange-500" onClick={() => loginWithRedirect()}>Log In</Button>
-            }
+            )}
           </SheetDescription>
         </SheetContent>
       </Sheet>
