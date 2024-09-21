@@ -86,7 +86,7 @@ const SearchPage = () => {
                 onChange={value => setConditions(prevState => ({ ...prevState, sortOption: value }))}/>
           </div>
           {/*  search result info  */}
-          {restaurantOverviewList?.data.map(restaurant => (<SearchResultCard restaurant={restaurant}/>))}
+          {restaurantOverviewList?.data.map(restaurant => (<SearchResultCard restaurant={restaurant} key={restaurant._id}/>))}
           {/*  pagination  */}
           <PaginationSelector current={restaurantOverviewList.pagination.page} size={10} total={restaurantOverviewList.pagination.total}
                               onPageChange={handlePageChange}/>

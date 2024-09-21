@@ -45,7 +45,7 @@ const useCreateCheckoutSession = () => {
     toast.error(error.toString());
     reset();
   }
-  return { createCheckoutSession, isLoading, error, reset };
+  return { createCheckoutSession, isLoading };
 }
 
 export { useCreateCheckoutSession };

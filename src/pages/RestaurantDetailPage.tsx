@@ -98,7 +98,7 @@ const RestaurantDetailPage = () => {
     };
 
     const data = await createCheckoutSession(checkoutData);
-    window.location.href = data.url;
+    window.location.href = data.sessionUrl;
   };
 
   if (isLoading || !restaurant) {
