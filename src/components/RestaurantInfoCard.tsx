@@ -1,11 +1,5 @@
 import { Restaurant } from "@/types";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "./ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, } from "./ui/card";
 import { Dot } from "lucide-react";
 
 type Props = {
@@ -25,7 +19,7 @@ const RestaurantInfoCard = ({ restaurant }: Props) => {
         </CardHeader>
         <CardContent className="flex">
           {restaurant.cuisines.map((item, index) => (
-              <span className="flex">
+              <span className="flex" key={item + index.toString()}>
                 <span>{item}</span>
                 {index < restaurant.cuisines.length - 1 && <Dot/>}
               </span>

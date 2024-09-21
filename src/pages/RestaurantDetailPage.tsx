@@ -7,6 +7,9 @@ import RestaurantInfoCard from "@/components/RestaurantInfoCard.tsx";
 import { useState } from "react";
 import { MenuItemType } from "@/types.ts";
 import MenuItem from "@/components/MenuItem.tsx";
+import OrderSummary from "@/components/OrderSummary.tsx";
+import CheckoutButton from "@/components/CheckoutButton.tsx";
+import { useCreateCheckoutSession } from "@/api/OrderApi.ts";
 
 export type CartItem = {
   _id: string;
@@ -18,8 +21,11 @@ export type CartItem = {
 const RestaurantDetailPage = () => {
   const { restaurantId } = useParams();
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
-  const { createCheckoutSession, isLoading: isCheckoutLoading } = useCreateCheckoutSession();
+  const { createCheckoutSession, isLoading: isCreatingCheckoutSession } = useCreateCheckoutSession();
 
+  /**
+   * try to recover the cart information from session storage
+   */
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
     return storedCartItems ? JSON.parse(storedCartItems) : [];
@@ -46,6 +52,9 @@ const RestaurantDetailPage = () => {
         ];
       }
 
+      /**
+       * store the cart information into session storage
+       */
       sessionStorage.setItem(`cartItems-${restaurantId}`, JSON.stringify(updatedCartItems));
 
       return updatedCartItems;
@@ -73,7 +82,7 @@ const RestaurantDetailPage = () => {
     }
 
     const checkoutData = {
-      cartItems: cartItems.map((cartItem) => ({
+      cartItems: cartItems.map(cartItem => ({
         menuItemId: cartItem._id,
         name: cartItem.name,
         quantity: cartItem.quantity.toString(),
@@ -105,8 +114,8 @@ const RestaurantDetailPage = () => {
           <div className="flex flex-col gap-4">
             <RestaurantInfoCard restaurant={restaurant}/>
             <span className="text-2xl font-bold tracking-tight">Menu</span>
-            {restaurant.menuItems.map((menuItem) => (
-                <MenuItem menuItem={menuItem} addToCart={() => addToCart(menuItem)}/>
+            {restaurant.menuItems.map(menuItem => (
+                <MenuItem menuItem={menuItem} addToCart={() => addToCart(menuItem)} key={menuItem._id}/>
             ))}
           </div>
 
@@ -114,7 +123,7 @@ const RestaurantDetailPage = () => {
             <Card>
               <OrderSummary restaurant={restaurant} cartItems={cartItems} removeFromCart={removeFromCart}/>
               <CardFooter>
-                <CheckoutButton disabled={cartItems.length === 0} onCheckout={onCheckout} isLoading={isCheckoutLoading}/>
+                <CheckoutButton disabled={cartItems.length === 0} onCheckout={onCheckout} isLoading={isCreatingCheckoutSession}/>
               </CardFooter>
             </Card>
           </div>
