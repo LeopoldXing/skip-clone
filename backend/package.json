@@ -1,5 +1,5 @@
 {
-  "name": "quick-bite-backend-express",
+  "name": "skip-clone-backend",
   "version": "1.0.0",
   "main": "./src/index.ts",
   "scripts": {
