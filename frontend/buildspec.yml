@@ -5,6 +5,7 @@ phases:
       nodejs: 20
   pre_build:
     commands:
+      - cd frontend
       - echo Installing source NPM dependencies...
       - npm install
   build:
