@@ -11,7 +11,7 @@ phases:
   pre_build:
     commands:
       - echo Zipping application files...
-      - zip -r application.zip . -x "*.git*" "node_modules/*" "test/*"
+      - zip -r application.zip * -x "*.git*" "node_modules/*" "test/*"
       - aws s3 cp application.zip s3://skip-clone/deployment/backend/application.zip
   build:
     commands:
