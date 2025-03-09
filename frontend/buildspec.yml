@@ -13,9 +13,9 @@ phases:
       - npm run build
   post_build:
     commands:
-      - aws s3 cp --recursive ./dist s3://quick-bite/
-      - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./dist/index.html s3://quick-bite/
-      - aws cloudfront create-invalidation --distribution-id EUUJTFBUFDDY --paths /
+      - aws s3 cp --recursive ./dist s3://skip-clone/
+      - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./dist/index.html s3://skip-clone/
+      - aws cloudfront create-invalidation --distribution-id dh0blri8ek0a4 --paths /
 artifacts:
   files:
     - "dist/*"
