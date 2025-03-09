@@ -19,5 +19,5 @@ phases:
       - aws cloudfront create-invalidation --distribution-id E29I135YLRJDOC --paths /
 artifacts:
   files:
-    - "dist/*"
-    - "dist/**/*"
+    - "frontend/dist/*"
+    - "frontend/dist/**/*"
