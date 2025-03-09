@@ -16,7 +16,7 @@ phases:
     commands:
       - aws s3 cp --recursive ./dist s3://skip-clone/
       - aws s3 cp --cache-control="max-age=0, no-cache, no-store, must-revalidate" ./dist/index.html s3://skip-clone/
-      - aws cloudfront create-invalidation --distribution-id dh0blri8ek0a4 --paths /
+      - aws cloudfront create-invalidation --distribution-id E29I135YLRJDOC --paths /
 artifacts:
   files:
     - "dist/*"
