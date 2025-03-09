@@ -17,8 +17,8 @@ phases:
     commands:
       - echo Zipping application files after build...
       - zip -r application.zip * -x "*.git*" "node_modules/*" "test/*"
-      - aws s3 cp application.zip s3://skip-clone/deployment/backend/application.zip
-
+      - mv application.zip ../
+      - aws s3 cp ../application.zip s3://skip-clone/deployment/backend/application.zip
 artifacts:
   files:
-    - 'backend/application.zip'
+    - 'application.zip'
