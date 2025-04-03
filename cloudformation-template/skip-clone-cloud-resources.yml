@@ -1,9 +1,9 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  CloudFormation template for establish the skip-clone cloud architecture.
+  An AWS CloudFormation template for establishing the cloud resources of skip-clone project.
   It creates a VPC named "skip-clone-vpc" with one public and one private subnet,
   an S3 bucket for frontend hosting with a name of "skip-clone-frontend-hosting-[RandomSuffix]",
-  and a CloudFront distribution using OAC for the S3 bucket.
+  and a CloudFront distribution using OAC (Origin Access Control) for the S3 bucket.
 
 Parameters:
   RandomSuffix:
@@ -96,6 +96,27 @@ Resources:
         IndexDocument: index.html
     DeletionPolicy: Retain
 
+  # Create S3 Bucket Policy to allow CloudFront access via OAC
+  FrontendBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref FrontendBucket
+      PolicyDocument:
+        Version: "2008-10-17"
+        Id: PolicyForCloudFrontPrivateContent
+        Statement:
+          - Sid: AllowCloudFrontServicePrincipal
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub "arn:aws:s3:::${FrontendBucket}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub
+                  - "arn:aws:cloudfront::${AWS::AccountId}:distribution/${DistributionId}"
+                  - { DistributionId: !GetAtt CloudFrontDistribution.Id }
+
   # Create CloudFront Origin Access Control (OAC)
   CloudFrontOAC:
     Type: AWS::CloudFront::OriginAccessControl
@@ -118,7 +139,7 @@ Resources:
           - Id: S3Origin
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
             OriginAccessControlId: !Ref CloudFrontOAC
-            S3OriginConfig: {}  # Use default settings
+            S3OriginConfig: { }  # Use default settings
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: redirect-to-https
