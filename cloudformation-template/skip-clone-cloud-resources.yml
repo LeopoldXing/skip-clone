@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  CloudFormation template for establish the skip-clone cloud architecture.
+  It creates a VPC named "skip-clone-vpc" with one public and one private subnet,
+  an S3 bucket for frontend hosting with a name of "skip-clone-frontend-hosting-[RandomSuffix]",
+  and a CloudFront distribution using OAC for the S3 bucket.
+
+Parameters:
+  RandomSuffix:
+    Description: "A 4-digit random number for the S3 bucket name suffix (e.g., 1234)."
+    Type: String
+    AllowedPattern: "^[0-9]{4}$"
+    ConstraintDescription: "Must be a 4-digit number, e.g., 1234."
+
+Resources:
+  # Create VPC
+  SkipCloneVPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: skip-clone-vpc
+
+  # Create Public Subnet
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.1.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-public-subnet
+
+  # Create Private Subnet
+  PrivateSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.2.0/24
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-private-subnet
+
+  # Create Internet Gateway
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: skip-clone-igw
+
+  # Attach Internet Gateway to VPC
+  VPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      InternetGatewayId: !Ref InternetGateway
+
+  # Create Public Route Table
+  PublicRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      Tags:
+        - Key: Name
+          Value: skip-clone-public-rt
+
+  # Create Route for Public Route Table
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: VPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref PublicRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # Associate Public Subnet with Public Route Table
+  PublicSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref PublicRouteTable
+
+  # Create S3 Bucket for frontend hosting
+  FrontendBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join [ "", [ "skip-clone-frontend-hosting-", !Ref RandomSuffix ] ]
+      WebsiteConfiguration:
+        IndexDocument: index.html
+    DeletionPolicy: Retain
+
+  # Create CloudFront Origin Access Control (OAC)
+  CloudFrontOAC:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: OAC-SkipClone-Frontend
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+        Description: "Origin Access Control for skip-clone frontend S3 bucket"
+
+  # Create CloudFront Distribution
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt FrontendBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOAC
+            S3OriginConfig: {}  # Use default settings
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          MinTTL: 0
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true
+        PriceClass: PriceClass_100
+
+Outputs:
+  VPCId:
+    Description: "Skip-clone VPC ID"
+    Value: !Ref SkipCloneVPC
+  PublicSubnetId:
+    Description: "Public Subnet ID"
+    Value: !Ref PublicSubnet
+  PrivateSubnetId:
+    Description: "Private Subnet ID"
+    Value: !Ref PrivateSubnet
+  FrontendBucketName:
+    Description: "Frontend S3 Bucket Name"
+    Value: !Ref FrontendBucket
+  CloudFrontDistributionDomainName:
+    Description: "CloudFront Distribution Domain Name"
+    Value: !GetAtt CloudFrontDistribution.DomainName
