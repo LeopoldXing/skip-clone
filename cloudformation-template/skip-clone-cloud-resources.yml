@@ -1,16 +1,18 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  An AWS CloudFormation template for establishing the cloud resources of skip-clone project.
-  It creates a VPC named "skip-clone-vpc" with one public and one private subnet,
-  an S3 bucket for frontend hosting with a name of "skip-clone-frontend-hosting-[RandomSuffix]",
-  and a CloudFront distribution using OAC (Origin Access Control) for the S3 bucket.
+  CloudFormation template for establishing the cloud resources of skip-clone application.
+  It creates a VPC with one public and one private subnet, a S3 bucket with CloudFront (using OAC) for frontend hosting,
+  an Elastic Beanstalk application and environment for deploying backend application.
 
 Parameters:
   RandomSuffix:
-    Description: "A 4-digit random number for the S3 bucket name suffix (e.g., 1234)."
+    Description: "A random 4-digit number for the S3 bucket name suffix (e.g., 1234)."
     Type: String
     AllowedPattern: "^[0-9]{4}$"
     ConstraintDescription: "Must be a 4-digit number, e.g., 1234."
+  ALBSSLCertificateARN:
+    Description: "ACM certificate ARN for the ALB HTTPS listener."
+    Type: String
 
 Resources:
   # Create VPC
@@ -128,7 +130,7 @@ Resources:
         SigningProtocol: sigv4
         Description: "Origin Access Control for skip-clone frontend S3 bucket"
 
-  # Create CloudFront Distribution
+  # Create CloudFront Distribution for frontend
   CloudFrontDistribution:
     Type: AWS::CloudFront::Distribution
     Properties:
@@ -158,6 +160,68 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100
 
+  # Create Elastic Beanstalk Application for backend
+  BackendApplication:
+    Type: AWS::ElasticBeanstalk::Application
+    Properties:
+      ApplicationName: skip-clone-backend
+      Description: "Elastic Beanstalk application for skip-clone backend."
+
+  # Create Elastic Beanstalk Environment for backend using PlatformArn from mapping
+  BackendEnvironment:
+    Type: AWS::ElasticBeanstalk::Environment
+    Properties:
+      ApplicationName: !Ref BackendApplication
+      EnvironmentName: prod
+      SolutionStackName: "64bit Amazon Linux 2023 v6.5.0 running Node.js 20"
+      OptionSettings:
+        # Set the service role for Elastic Beanstalk
+        - Namespace: "aws:elasticbeanstalk:environment"
+          OptionName: ServiceRole
+          Value: "aws-elasticbeanstalk-service-role-skip-clone"
+        # Specify environment type as LoadBalanced
+        - Namespace: "aws:elasticbeanstalk:environment"
+          OptionName: EnvironmentType
+          Value: "LoadBalanced"
+        # Configure Auto Scaling group size
+        - Namespace: "aws:autoscaling:asg"
+          OptionName: MinSize
+          Value: "1"
+        - Namespace: "aws:autoscaling:asg"
+          OptionName: MaxSize
+          Value: "3"
+        # Set the EC2 instance profile for the launch configuration
+        - Namespace: "aws:autoscaling:launchconfiguration"
+          OptionName: IamInstanceProfile
+          Value: "elasticbeanstalk-instance-profile-skip-clone"
+        # Configure VPC settings using resources created above
+        - Namespace: "aws:ec2:vpc"
+          OptionName: VPCId
+          Value: !Ref SkipCloneVPC
+        - Namespace: "aws:ec2:vpc"
+          OptionName: Subnets
+          Value: !Ref PrivateSubnet
+        - Namespace: "aws:ec2:vpc"
+          OptionName: ELBSubnets
+          Value: !Ref PublicSubnet
+        # Configure ALB listener settings for HTTPS on port 443
+        - Namespace: "aws:elbv2:listener:443"
+          OptionName: ListenerEnabled
+          Value: "true"
+        - Namespace: "aws:elbv2:listener:443"
+          OptionName: Protocol
+          Value: "HTTPS"
+        - Namespace: "aws:elbv2:listener:443"
+          OptionName: Port
+          Value: "443"
+        - Namespace: "aws:elbv2:listener:443"
+          OptionName: SSLCertificateArns
+          Value: !Ref ALBSSLCertificateARN
+        # Specify allowed instance types for the environment
+        - Namespace: "aws:ec2:instances"
+          OptionName: AllowedInstanceTypes
+          Value: "t2.micro,t3.micro"
+
 Outputs:
   VPCId:
     Description: "Skip-clone VPC ID"
@@ -174,3 +238,9 @@ Outputs:
   CloudFrontDistributionDomainName:
     Description: "CloudFront Distribution Domain Name"
     Value: !GetAtt CloudFrontDistribution.DomainName
+  BackendApplicationName:
+    Description: "Elastic Beanstalk Application Name for Backend"
+    Value: !Ref BackendApplication
+  BackendEnvironmentName:
+    Description: "Elastic Beanstalk Environment Name for Backend"
+    Value: !Ref BackendEnvironment
