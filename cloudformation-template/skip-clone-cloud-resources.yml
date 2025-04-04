@@ -1,20 +1,23 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   CloudFormation template for establishing the cloud resources of skip-clone application.
-  It creates a VPC with one public and one private subnet, a S3 bucket with CloudFront (using OAC) for frontend hosting,
-  an Elastic Beanstalk application and environment for deploying backend application.
+  It creates a VPC with three public and three private subnets across three AZs for high availability,
+  a S3 bucket with CloudFront (using OAC) for frontend hosting,
+  an Elastic Beanstalk application and environment for deploying backend application,
+  and sets up Route53 with a custom domain and ACM SSL certificate for the ALB.
 
 Parameters:
   RandomSuffix:
-    Description: "A random 4-digit number for the S3 bucket name suffix (e.g., 1234)."
+    Description: "A random 4-digit number for the S3 bucket name suffix and domain uniqueness (e.g., 1234)."
     Type: String
     AllowedPattern: "^[0-9]{4}$"
     ConstraintDescription: "Must be a 4-digit number, e.g., 1234."
-  ALBSSLCertificateARN:
-    Description: "ACM certificate ARN for the ALB HTTPS listener."
-    Type: String
 
 Resources:
+  # ------------------------------
+  # 网络相关资源
+  # ------------------------------
+
   # Create VPC
   SkipCloneVPC:
     Type: AWS::EC2::VPC
@@ -26,8 +29,8 @@ Resources:
         - Key: Name
           Value: skip-clone-vpc
 
-  # Create Public Subnet
-  PublicSubnet:
+  # Create Public Subnets in three AZs
+  PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref SkipCloneVPC
@@ -36,18 +39,60 @@ Resources:
       AvailabilityZone: !Select [ 0, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: skip-clone-public-subnet
+          Value: skip-clone-public-subnet-1
 
-  # Create Private Subnet
-  PrivateSubnet:
+  PublicSubnet2:
     Type: AWS::EC2::Subnet
     Properties:
       VpcId: !Ref SkipCloneVPC
       CidrBlock: 10.0.2.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-public-subnet-2
+
+  PublicSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.3.0/24
+      MapPublicIpOnLaunch: true
+      AvailabilityZone: !Select [ 2, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-public-subnet-3
+
+  # Create Private Subnets in three AZs
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.11.0/24
       AvailabilityZone: !Select [ 0, !GetAZs "" ]
       Tags:
         - Key: Name
-          Value: skip-clone-private-subnet
+          Value: skip-clone-private-subnet-1
+
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.12.0/24
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-private-subnet-2
+
+  PrivateSubnet3:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref SkipCloneVPC
+      CidrBlock: 10.0.13.0/24
+      AvailabilityZone: !Select [ 2, !GetAZs "" ]
+      Tags:
+        - Key: Name
+          Value: skip-clone-private-subnet-3
 
   # Create Internet Gateway
   InternetGateway:
@@ -82,12 +127,28 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  # Associate Public Subnet with Public Route Table
-  PublicSubnetRouteTableAssociation:
+  # Associate each Public Subnet with Public Route Table
+  PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
-      SubnetId: !Ref PublicSubnet
+      SubnetId: !Ref PublicSubnet1
       RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet2RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet2
+      RouteTableId: !Ref PublicRouteTable
+
+  PublicSubnet3RouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet3
+      RouteTableId: !Ref PublicRouteTable
+
+  # ------------------------------
+  # 前端托管相关资源
+  # ------------------------------
 
   # Create S3 Bucket for frontend hosting
   FrontendBucket:
@@ -160,6 +221,42 @@ Resources:
           CloudFrontDefaultCertificate: true
         PriceClass: PriceClass_100
 
+  # ------------------------------
+  # 新增：Route53 域名与 ACM 证书相关资源
+  # ------------------------------
+
+  # 创建 Hosted Zone，域名为 skip-clone.leopoldhsingresumeproject[randomSuffix].cc
+  SkipCloneHostedZone:
+    Type: AWS::Route53::HostedZone
+    Properties:
+      Name: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+
+  # 创建 ACM 证书，使用 DNS 验证，域名为 skip-clone.leopoldhsingresumeproject[randomSuffix].cc
+  SkipCloneCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+      ValidationMethod: DNS
+      DomainValidationOptions:
+        - DomainName: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+          HostedZoneId: !Ref SkipCloneHostedZone
+
+  # 创建 CNAME 记录，将域名指向 Elastic Beanstalk 创建的 ALB
+  SkipCloneCNAMERecord:
+    Type: AWS::Route53::RecordSet
+    DependsOn: BackendEnvironment
+    Properties:
+      HostedZoneId: !Ref SkipCloneHostedZone
+      Name: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+      Type: CNAME
+      TTL: '300'
+      ResourceRecords:
+        - !GetAtt BackendEnvironment.EndpointURL
+
+  # ------------------------------
+  # 后端部署资源：Elastic Beanstalk 应用与环境
+  # ------------------------------
+
   # Create Elastic Beanstalk Application for backend
   BackendApplication:
     Type: AWS::ElasticBeanstalk::Application
@@ -167,7 +264,7 @@ Resources:
       ApplicationName: skip-clone-backend
       Description: "Elastic Beanstalk application for skip-clone backend."
 
-  # Create Elastic Beanstalk Environment for backend using PlatformArn from mapping
+  # Create Elastic Beanstalk Environment for backend
   BackendEnvironment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
@@ -186,10 +283,10 @@ Resources:
         # Configure Auto Scaling group size
         - Namespace: "aws:autoscaling:asg"
           OptionName: MinSize
-          Value: "1"
+          Value: "3"
         - Namespace: "aws:autoscaling:asg"
           OptionName: MaxSize
-          Value: "3"
+          Value: "6"
         # Set the EC2 instance profile for the launch configuration
         - Namespace: "aws:autoscaling:launchconfiguration"
           OptionName: IamInstanceProfile
@@ -200,10 +297,10 @@ Resources:
           Value: !Ref SkipCloneVPC
         - Namespace: "aws:ec2:vpc"
           OptionName: Subnets
-          Value: !Ref PrivateSubnet
+          Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ] ]
         - Namespace: "aws:ec2:vpc"
           OptionName: ELBSubnets
-          Value: !Ref PublicSubnet
+          Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ] ]
         # Configure ALB listener settings for HTTPS on port 443
         - Namespace: "aws:elbv2:listener:443"
           OptionName: ListenerEnabled
@@ -214,9 +311,10 @@ Resources:
         - Namespace: "aws:elbv2:listener:443"
           OptionName: Port
           Value: "443"
+        # 配置 ALB 使用新建的 ACM 证书 ARN
         - Namespace: "aws:elbv2:listener:443"
           OptionName: SSLCertificateArns
-          Value: !Ref ALBSSLCertificateARN
+          Value: !Ref SkipCloneCertificate
         # Specify allowed instance types for the environment
         - Namespace: "aws:ec2:instances"
           OptionName: AllowedInstanceTypes
@@ -226,12 +324,12 @@ Outputs:
   VPCId:
     Description: "Skip-clone VPC ID"
     Value: !Ref SkipCloneVPC
-  PublicSubnetId:
-    Description: "Public Subnet ID"
-    Value: !Ref PublicSubnet
-  PrivateSubnetId:
-    Description: "Private Subnet ID"
-    Value: !Ref PrivateSubnet
+  PublicSubnetIds:
+    Description: "Public Subnet IDs"
+    Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ] ]
+  PrivateSubnetIds:
+    Description: "Private Subnet IDs"
+    Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ] ]
   FrontendBucketName:
     Description: "Frontend S3 Bucket Name"
     Value: !Ref FrontendBucket
@@ -244,3 +342,6 @@ Outputs:
   BackendEnvironmentName:
     Description: "Elastic Beanstalk Environment Name for Backend"
     Value: !Ref BackendEnvironment
+  CustomDomain:
+    Description: "Custom domain for skip-clone application"
+    Value: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
