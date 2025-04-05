@@ -7,26 +7,21 @@ Description: >
   and deploys an Amazon DocumentDB cluster (3 instances for high availability) as database.
 
 Parameters:
-  RandomSuffix:
-    Description: "A random 4-digit number for the S3 bucket name suffix (e.g., 1234)."
+  S3BucketName:
+    Description: "The name for S3 bucket, it must be globally unique. (e.g., skip-clone-frontend-hosting-123)"
     Type: String
-    AllowedPattern: "^[0-9]{4}$"
-    ConstraintDescription: "Must be a 4-digit number, e.g., 1234."
   DBUsername:
     Description: "The username for the DocumentDB cluster master user."
     Type: String
   DBPassword:
-    Description: "The password for the DocumentDB cluster master user (self-managed)."
+    Description: "The password for the DocumentDB cluster master user."
     Type: String
     NoEcho: true
   DomainName:
-    Description: "Full domain name (e.g., skip-clone.example.com) for ALB, must be hosted by Route 53 with an SSL/TLS certificate."
+    Description: "Domain name (e.g., skip-clone.example.com) that will later point to ALB"
     Type: String
-  HostedZoneId:
-    Description: "Hosted zone Id of the domain name, this can be found in Route53 service"
-    Type: String
-  DomainCertificateARN:
-    Description: "ARN for the SSL/TLS certificate managed by ACM or IAM"
+  CertificateARN:
+    Description: "ARN for the corresponding SSL/TLS certificate, managed by ACM or IAM"
     Type: String
 
 Resources:
@@ -161,7 +156,7 @@ Resources:
   FrontendBucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: !Join [ "", [ "skip-clone-frontend-hosting-", !Ref RandomSuffix ] ]
+      BucketName: !Ref S3BucketName
       WebsiteConfiguration:
         IndexDocument: index.html
     DeletionPolicy: Retain
@@ -290,7 +285,7 @@ Resources:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
       ApplicationName: !Ref BackendApplication
-      EnvironmentName: prod
+      EnvironmentName: skip-clone-backend-prod
       SolutionStackName: "64bit Amazon Linux 2023 v6.5.0 running Node.js 20"
       OptionSettings:
         # Elastic Beanstalk service role
@@ -335,7 +330,7 @@ Resources:
         # ALB SSL Certificate
         - Namespace: "aws:elbv2:listener:443"
           OptionName: SSLCertificateArns
-          Value: !Ref DomainCertificateARN
+          Value: !Ref CertificateARN
         - Namespace: "aws:ec2:instances"
           OptionName: InstanceTypes
           Value: "t3.micro,t3.small"
@@ -409,21 +404,12 @@ Outputs:
   PrivateSubnetIds:
     Description: "Private Subnet IDs"
     Value: !Join [ ",", [ !Ref PrivateSubnet1, !Ref PrivateSubnet2, !Ref PrivateSubnet3 ] ]
-  FrontendBucketName:
-    Description: "Frontend S3 Bucket Name"
-    Value: !Ref FrontendBucket
   CloudFrontDistributionDomainName:
     Description: "CloudFront Distribution Domain Name"
     Value: !GetAtt CloudFrontDistribution.DomainName
-  BackendApplicationName:
-    Description: "Elastic Beanstalk Application Name for Backend"
-    Value: !Ref BackendApplication
-  BackendEnvironmentName:
-    Description: "Elastic Beanstalk Environment Name for Backend"
-    Value: !Ref BackendEnvironment
-  CustomDomain:
-    Description: "Custom domain for skip-clone application"
-    Value: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+  BackendEnvEndpoint:
+    Description: "Backend endpoint"
+    Value: !GetAtt BackendEnvironment.EndpointURL
   DocumentDBClusterEndpoint:
     Description: "DocumentDB cluster endpoint"
     Value: !GetAtt DocumentDBCluster.Endpoint
