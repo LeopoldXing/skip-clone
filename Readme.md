@@ -17,7 +17,9 @@ Additionally, a domain name managed by Route 53, and a SSL/TLS certificate manag
 
 #### 2.1 Cloudformation template
 
-A cloudformation template can be found under **cloud-resources** folder, this template will create following resources:
+A cloudformation template can be found under **cloud-resources** folder, this template will create all the could resources needed:
+
+![skip-clone-cloud-resources](https://hilda-notes-service.s3.ca-central-1.amazonaws.com/2025/04/ec9fda51cf09c4b31a71a26dfb66b0c10eb29ce20ba6596698a91e980136206b.png)
 
 1. Network resources:
 
@@ -38,7 +40,23 @@ A cloudformation template can be found under **cloud-resources** folder, this te
 
 3. IAM roles
 
-   - 
+   - Instance profile for EC2 instances
+   - Elastic Beanstalk service role
+
+4. Backend environment
+
+   - 1 Elastic Beanstalk Application
+   - 1 Elastic Beanstalk Environment, which will create
+     - 1 Application Load Balancer
+     - 1 Auto Scalling Group
+     - 3 EC2 instances (t3.micro)
+     - Security groups
+
+5. Database cluster
+
+   - 1 Amazon Document DB cluster (Instance-based, standard storage), which contains:
+     - 3 Document DB instances (db.t3.medium)
+   - Security groups
 
 
 
@@ -52,7 +70,7 @@ In the AWS console, you can set the following parameters for this stack
 
 | Param              | Description                                                  | Example                         |
 | ------------------ | ------------------------------------------------------------ | ------------------------------- |
-| **DomainName**     | Domain name that will later point to ALB                     | skip-clone.example.com          |
+| **DomainName**     | Domain name that will later point to Elastic Beanstalk environment endpoint | skip-clone.example.com          |
 | **CertificateARN** | ARN for the corresponding SSL/TLS certificate, managed by ACM or IAM |                                 |
 | **DBUsername**     | The username for the DocumentDB cluster master user.         | leopold                         |
 | **DBPassword**     | The password for the DocumentDB cluster master user.         |                                 |
@@ -65,4 +83,10 @@ After submiting, the creation process might take up to 15 min to complete
 ### 3. Create Auth0 Account
 
 
+
+### 4. Create Cloudinary Account
+
+
+
+### 5. Deployment
 
