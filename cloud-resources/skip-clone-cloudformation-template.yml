@@ -2,23 +2,37 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: >
   CloudFormation template for establishing the cloud resources of skip-clone application.
   It creates a VPC with three public and three private subnets across three AZs for high availability,
-  a S3 bucket with CloudFront (using OAC) for frontend hosting,
+  a S3 bucket with CloudFront distribution (via OAC) for frontend hosting,
   an Elastic Beanstalk application and environment for deploying backend application,
-  and sets up Route53 with a custom domain and ACM SSL certificate for the ALB.
+  and deploys an Amazon DocumentDB cluster (3 instances for high availability) as database.
 
 Parameters:
   RandomSuffix:
-    Description: "A random 4-digit number for the S3 bucket name suffix and domain uniqueness (e.g., 1234)."
+    Description: "A random 4-digit number for the S3 bucket name suffix (e.g., 1234)."
     Type: String
     AllowedPattern: "^[0-9]{4}$"
     ConstraintDescription: "Must be a 4-digit number, e.g., 1234."
+  DBUsername:
+    Description: "The username for the DocumentDB cluster master user."
+    Type: String
+  DBPassword:
+    Description: "The password for the DocumentDB cluster master user (self-managed)."
+    Type: String
+    NoEcho: true
+  DomainName:
+    Description: "Full domain name (e.g., skip-clone.example.com) for ALB, must be hosted by Route 53 with an SSL/TLS certificate."
+    Type: String
+  HostedZoneId:
+    Description: "Hosted zone Id of the domain name, this can be found in Route53 service"
+    Type: String
+  DomainCertificateARN:
+    Description: "ARN for the SSL/TLS certificate managed by ACM or IAM"
+    Type: String
 
 Resources:
   # ------------------------------
-  # 网络相关资源
+  # Network resources
   # ------------------------------
-
-  # Create VPC
   SkipCloneVPC:
     Type: AWS::EC2::VPC
     Properties:
@@ -29,7 +43,6 @@ Resources:
         - Key: Name
           Value: skip-clone-vpc
 
-  # Create Public Subnets in three AZs
   PublicSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -63,7 +76,6 @@ Resources:
         - Key: Name
           Value: skip-clone-public-subnet-3
 
-  # Create Private Subnets in three AZs
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -94,7 +106,6 @@ Resources:
         - Key: Name
           Value: skip-clone-private-subnet-3
 
-  # Create Internet Gateway
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -102,14 +113,12 @@ Resources:
         - Key: Name
           Value: skip-clone-igw
 
-  # Attach Internet Gateway to VPC
   VPCGatewayAttachment:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
       VpcId: !Ref SkipCloneVPC
       InternetGatewayId: !Ref InternetGateway
 
-  # Create Public Route Table
   PublicRouteTable:
     Type: AWS::EC2::RouteTable
     Properties:
@@ -118,7 +127,6 @@ Resources:
         - Key: Name
           Value: skip-clone-public-rt
 
-  # Create Route for Public Route Table
   PublicRoute:
     Type: AWS::EC2::Route
     DependsOn: VPCGatewayAttachment
@@ -127,7 +135,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       GatewayId: !Ref InternetGateway
 
-  # Associate each Public Subnet with Public Route Table
   PublicSubnet1RouteTableAssociation:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -147,7 +154,7 @@ Resources:
       RouteTableId: !Ref PublicRouteTable
 
   # ------------------------------
-  # 前端托管相关资源
+  # Frontend resources
   # ------------------------------
 
   # Create S3 Bucket for frontend hosting
@@ -222,49 +229,63 @@ Resources:
         PriceClass: PriceClass_100
 
   # ------------------------------
-  # 新增：Route53 域名与 ACM 证书相关资源
+  # IAM resources:
+  #
+  # Elastic Beanstalk Instance Role & Instance Profile & Elastic Beanstalk Service Role
   # ------------------------------
-
-  # 创建 Hosted Zone，域名为 skip-clone.leopoldhsingresumeproject[randomSuffix].cc
-  SkipCloneHostedZone:
-    Type: AWS::Route53::HostedZone
+  ElasticBeanstalkInstanceRole:
+    Type: AWS::IAM::Role
     Properties:
-      Name: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkMulticontainerDocker
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkWebTier
+      Path: "/"
 
-  # 创建 ACM 证书，使用 DNS 验证，域名为 skip-clone.leopoldhsingresumeproject[randomSuffix].cc
-  SkipCloneCertificate:
-    Type: AWS::CertificateManager::Certificate
+  ElasticBeanstalkInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
     Properties:
-      DomainName: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
-      ValidationMethod: DNS
-      DomainValidationOptions:
-        - DomainName: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
-          HostedZoneId: !Ref SkipCloneHostedZone
+      Roles:
+        - !Ref ElasticBeanstalkInstanceRole
+      Path: "/"
 
-  # 创建 CNAME 记录，将域名指向 Elastic Beanstalk 创建的 ALB
-  SkipCloneCNAMERecord:
-    Type: AWS::Route53::RecordSet
-    DependsOn: BackendEnvironment
+  ElasticBeanstalkServiceRole:
+    Type: AWS::IAM::Role
     Properties:
-      HostedZoneId: !Ref SkipCloneHostedZone
-      Name: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
-      Type: CNAME
-      TTL: '300'
-      ResourceRecords:
-        - !GetAtt BackendEnvironment.EndpointURL
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - elasticbeanstalk.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSElasticBeanstalkEnhancedHealth
+        - arn:aws:iam::aws:policy/AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy
+      Path: "/"
 
   # ------------------------------
-  # 后端部署资源：Elastic Beanstalk 应用与环境
+  # Backend resources:
+  #
+  # 1. Elastic beanstalk app
+  # 2. Elastic beanstalk env
   # ------------------------------
-
-  # Create Elastic Beanstalk Application for backend
   BackendApplication:
     Type: AWS::ElasticBeanstalk::Application
     Properties:
       ApplicationName: skip-clone-backend
       Description: "Elastic Beanstalk application for skip-clone backend."
 
-  # Create Elastic Beanstalk Environment for backend
   BackendEnvironment:
     Type: AWS::ElasticBeanstalk::Environment
     Properties:
@@ -272,26 +293,29 @@ Resources:
       EnvironmentName: prod
       SolutionStackName: "64bit Amazon Linux 2023 v6.5.0 running Node.js 20"
       OptionSettings:
-        # Set the service role for Elastic Beanstalk
+        # Elastic Beanstalk service role
         - Namespace: "aws:elasticbeanstalk:environment"
           OptionName: ServiceRole
-          Value: "aws-elasticbeanstalk-service-role-skip-clone"
-        # Specify environment type as LoadBalanced
+          Value: !Ref ElasticBeanstalkServiceRole
+        # LoadBalancing
         - Namespace: "aws:elasticbeanstalk:environment"
           OptionName: EnvironmentType
           Value: "LoadBalanced"
-        # Configure Auto Scaling group size
+        - Namespace: "aws:elasticbeanstalk:environment"
+          OptionName: LoadBalancerType
+          Value: "application"
+        # Auto Scaling Group settings
         - Namespace: "aws:autoscaling:asg"
           OptionName: MinSize
           Value: "3"
         - Namespace: "aws:autoscaling:asg"
           OptionName: MaxSize
           Value: "6"
-        # Set the EC2 instance profile for the launch configuration
+        # Instance profile for EC2
         - Namespace: "aws:autoscaling:launchconfiguration"
           OptionName: IamInstanceProfile
-          Value: "elasticbeanstalk-instance-profile-skip-clone"
-        # Configure VPC settings using resources created above
+          Value: !Ref ElasticBeanstalkInstanceProfile
+        # Network for EC2
         - Namespace: "aws:ec2:vpc"
           OptionName: VPCId
           Value: !Ref SkipCloneVPC
@@ -301,24 +325,79 @@ Resources:
         - Namespace: "aws:ec2:vpc"
           OptionName: ELBSubnets
           Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ] ]
-        # Configure ALB listener settings for HTTPS on port 443
+        # ALB Https listener
         - Namespace: "aws:elbv2:listener:443"
           OptionName: ListenerEnabled
           Value: "true"
         - Namespace: "aws:elbv2:listener:443"
           OptionName: Protocol
           Value: "HTTPS"
-        - Namespace: "aws:elbv2:listener:443"
-          OptionName: Port
-          Value: "443"
-        # 配置 ALB 使用新建的 ACM 证书 ARN
+        # ALB SSL Certificate
         - Namespace: "aws:elbv2:listener:443"
           OptionName: SSLCertificateArns
-          Value: !Ref SkipCloneCertificate
-        # Specify allowed instance types for the environment
+          Value: !Ref DomainCertificateARN
         - Namespace: "aws:ec2:instances"
-          OptionName: AllowedInstanceTypes
-          Value: "t2.micro,t3.micro"
+          OptionName: InstanceTypes
+          Value: "t3.micro,t3.small"
+        - Namespace: "aws:ec2:instances"
+          OptionName: SupportedArchitectures
+          Value: "x86_64"
+
+  # ------------------------------
+  # Amazon DocumentDB
+  # ------------------------------
+
+  DocumentDBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for DocumentDB cluster"
+      SubnetIds:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
+        - !Ref PrivateSubnet3
+
+  DocumentDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: "Security group for DocumentDB cluster"
+      VpcId: !Ref SkipCloneVPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 27017
+          ToPort: 27017
+          CidrIp: 10.0.0.0/16
+
+  DocumentDBCluster:
+    Type: AWS::DocDB::DBCluster
+    Properties:
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      VpcSecurityGroupIds:
+        - !Ref DocumentDBSecurityGroup
+      DBSubnetGroupName: !Ref DocumentDBSubnetGroup
+      BackupRetentionPeriod: 5
+      PreferredMaintenanceWindow: "sun:05:00-sun:06:00"
+
+  DocumentDBInstance1:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocumentDBCluster
+      DBInstanceClass: db.t3.medium
+      AvailabilityZone: !Select [ 0, !GetAZs "" ]
+
+  DocumentDBInstance2:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocumentDBCluster
+      DBInstanceClass: db.t3.medium
+      AvailabilityZone: !Select [ 1, !GetAZs "" ]
+
+  DocumentDBInstance3:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBClusterIdentifier: !Ref DocumentDBCluster
+      DBInstanceClass: db.t3.medium
+      AvailabilityZone: !Select [ 2, !GetAZs "" ]
 
 Outputs:
   VPCId:
@@ -345,3 +424,6 @@ Outputs:
   CustomDomain:
     Description: "Custom domain for skip-clone application"
     Value: !Join [ "", [ "skip-clone.leopoldhsingresumeproject", !Ref RandomSuffix, ".cc" ] ]
+  DocumentDBClusterEndpoint:
+    Description: "DocumentDB cluster endpoint"
+    Value: !GetAtt DocumentDBCluster.Endpoint
