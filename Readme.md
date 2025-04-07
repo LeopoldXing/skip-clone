@@ -30,6 +30,7 @@ A cloudformation template can be found under **cloud-resources** folder, this te
    - 3 private subnets
 
    - 1 Internet Gateway (IGW)
+   - 3 NAT gateway
 
    - Route tables and associations
 

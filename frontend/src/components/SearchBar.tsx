@@ -46,7 +46,7 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
             <FormField control={form.control} name='keyword' render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Input {...field} className="w-full border-none shadow-none text-xl focus-visible:ring-0" placeholder={placeholder}/>
+                    <Input {...field} className="border-none shadow-none text-xl focus-visible:ring-0" placeholder={placeholder}/>
                   </FormControl>
                 </FormItem>
             )}/>
