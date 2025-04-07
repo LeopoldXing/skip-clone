@@ -39,21 +39,38 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
 
   return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)}
-              className={`flex items-center gap-3 justify-between flex-row border-2 rounded-full p-3 ${form.formState.errors.keyword && "border-red-500"}`}>
+        <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            role="search"
+            aria-label="Search form"
+            className={`flex items-center gap-3 justify-between flex-row border-2 rounded-full p-3 ${form.formState.errors.keyword && "border-red-500"}`}
+        >
           <div className="flex justify-start items-center gap-1">
-            <Search strokeWidth={2.5} size={30} className="ml-1 text-orange-500 hidden md:block"/>
+            <Search
+                strokeWidth={2.5}
+                size={30}
+                className="ml-1 text-[#c14e2a] hidden md:block"
+                aria-hidden="true"
+            />
             <FormField control={form.control} name='keyword' render={({ field }) => (
                 <FormItem>
+                  <label className="sr-only" htmlFor={`input-${field.name}`}>Search</label>
                   <FormControl>
-                    <Input {...field} className="border-none shadow-none text-xl focus-visible:ring-0" placeholder={placeholder}/>
+                    <Input
+                        {...field}
+                        id={`input-${field.name}`}
+                        className="border-none shadow-none text-xl focus-visible:ring-0"
+                        placeholder={placeholder}
+                        aria-label={placeholder}
+                        aria-invalid={form.formState.errors.keyword ? "true" : "false"}
+                    />
                   </FormControl>
                 </FormItem>
             )}/>
           </div>
           <div className="flex items-center justify-end gap-2">
             <Button type="button" onClick={handleReset} variant="outline" className="rounded-full">Clear</Button>
-            <Button type="submit" className="rounded-full bg-orange-500">Search</Button>
+            <Button type="submit" className="rounded-full bg-[#c14e2a] text-white">Search</Button>
           </div>
         </form>
       </Form>

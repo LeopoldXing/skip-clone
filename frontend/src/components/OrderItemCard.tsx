@@ -27,26 +27,29 @@ const OrderItemCard = ({ order }: Props) => {
 
   const getTime = () => {
     const orderDateTime = new Date(order.createdAt);
-
     const hours = orderDateTime.getHours();
     const minutes = orderDateTime.getMinutes();
-
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
     return `${hours}:${paddedMinutes}`;
   };
 
   return (
       <Card>
         <CardHeader>
-          <CardTitle className="grid md:grid-cols-[2fr_2fr_1fr_1fr] gap-4 justify-between mb-3">
+          <CardTitle
+              role="group" // Groups order details for assistive technologies
+              aria-label="Order details"
+              className="grid md:grid-cols-[2fr_2fr_1fr_1fr] gap-4 justify-between mb-3"
+          >
             <div>
               Customer Name:
               <span className="ml-2 font-normal">{order.deliveryDetails.name}</span>
             </div>
             <div>
               Delivery address:
-              <span className="ml-2 font-normal">{order.deliveryDetails.addressLine1}, {order.deliveryDetails.city}</span>
+              <span className="ml-2 font-normal">
+              {order.deliveryDetails.addressLine1}, {order.deliveryDetails.city}
+            </span>
             </div>
             <div>
               Time:
@@ -62,23 +65,32 @@ const OrderItemCard = ({ order }: Props) => {
           <Separator/>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
-          <div className="flex flex-col gap-2">
-            {order.cartItems.map(cartItem => (
-                <span key={cartItem.name}>
-                  <Badge variant="outline" className="mr-2">
+          <ul className="flex flex-col gap-2">
+            {order.cartItems.map((cartItem) => (
+                <li key={cartItem.name}>
+                  <Badge variant="outline" className="mr-2" aria-hidden="true">
                     {cartItem.quantity}
-                  </Badge>{cartItem.name}
-                </span>
+                  </Badge>
+                  {cartItem.name}
+                </li>
             ))}
-          </div>
+          </ul>
           <div className="flex flex-col space-y-1.5">
             <Label htmlFor="status">What is the status of this order?</Label>
-            <Select value={status} disabled={isLoading} onValueChange={value => handleStatusChange(value as OrderStatus)}>
+            <Select
+                value={status}
+                disabled={isLoading}
+                onValueChange={(value) => handleStatusChange(value as OrderStatus)}
+            >
               <SelectTrigger id="status">
                 <SelectValue placeholder="Status"/>
               </SelectTrigger>
               <SelectContent position="popper">
-                {ORDER_STATUS.map((status) => (<SelectItem value={status.value} key={status.value}>{status.label}</SelectItem>))}
+                {ORDER_STATUS.map((status) => (
+                    <SelectItem value={status.value} key={status.value}>
+                      {status.label}
+                    </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

@@ -6,14 +6,41 @@ const MobileNavLinks = () => {
   const { logout } = useAuth0();
 
   return (
-      <>
-        <Link to='/order-status' className='flex items-center font-bold bg-white hover:text-orange-500'>Order Status</Link>
-        <Link to='/manage-restaurant' className='flex items-center font-bold bg-white hover:text-orange-500'>My Restaurant</Link>
-        <Link to="/user-profile" className="flex items-center font-bold bg-white hover:text-orange-500">User Profile</Link>
-        <Button className="px-3 flex items-center font-bold hover:bg-gray-500" onClick={() => logout()}>
-          Log Out
-        </Button>
-      </>
+      <ul className="space-y-2">
+        <li>
+          <Link
+              to="/order-status"
+              className="flex items-center font-bold bg-white hover:text-[#c14e2a]"
+          >
+            Order Status
+          </Link>
+        </li>
+        <li>
+          <Link
+              to="/manage-restaurant"
+              className="flex items-center font-bold bg-white hover:text-[#c14e2a]"
+          >
+            My Restaurant
+          </Link>
+        </li>
+        <li>
+          <Link
+              to="/user-profile"
+              className="flex items-center font-bold bg-white hover:text-[#c14e2a]"
+          >
+            User Profile
+          </Link>
+        </li>
+        <li>
+          <Button
+              type="button"
+              className="px-3 flex items-center font-bold hover:bg-gray-500"
+              onClick={() => logout()}
+          >
+            Log Out
+          </Button>
+        </li>
+      </ul>
   );
 };
 

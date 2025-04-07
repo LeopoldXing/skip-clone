@@ -9,28 +9,38 @@ type Props = {
 const OrderStatusHeader = ({ order }: Props) => {
   const getExpectedDelivery = () => {
     const created = new Date(order.createdAt);
-
     created.setMinutes(created.getMinutes() + order.restaurant.estimatedDeliveryTime);
-
     const hours = created.getHours();
     const minutes = created.getMinutes();
-
     const paddedMinutes = minutes < 10 ? `0${minutes}` : minutes;
-
-    return `${hours}:${paddedMinutes}`;
+    return { display: `${hours}:${paddedMinutes}`, iso: created.toISOString() };
   };
 
   const getOrderStatusInfo = () => {
     return ORDER_STATUS.find(status => status.value === order.status) || ORDER_STATUS[0];
   };
 
+  const expectedDelivery = getExpectedDelivery();
+  const orderStatusInfo = getOrderStatusInfo();
+
   return (
       <>
         <h1 className="text-4xl font-bold tracking-tighter flex flex-col gap-5 md:flex-row md:justify-between">
-          <span>Order Status: {getOrderStatusInfo().label}</span>
-          <span>Expected by: {getExpectedDelivery()}</span>
+          <span>Order Status: {orderStatusInfo.label}</span>
+          <span>
+          Expected by:{" "}
+            <time dateTime={expectedDelivery.iso}>{expectedDelivery.display}</time>
+        </span>
         </h1>
-        <Progress className="animate-pulse" value={getOrderStatusInfo().progressValue}/>
+        <Progress
+            className="animate-pulse"
+            value={orderStatusInfo.progressValue}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={orderStatusInfo.progressValue}
+            aria-label={`Order progress: ${orderStatusInfo.label}`}
+        />
       </>
   );
 };

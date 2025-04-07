@@ -5,10 +5,10 @@ import Logo from "@/assets/logo.svg";
 
 const Header = () => {
   return (
-      <div className="border-b-2 border-b-orange-500 py-6">
-        <div className="container max-auto flex justify-between items-center">
-          <Link className="text-3xl font-bold tracking-tight text-orange-500" to="/">
-            <img src={Logo} alt="logo" className="h-6"/>
+      <header className="border-b-2 border-b-[#c14e2a] py-6">
+        <div className="container mx-auto flex justify-between items-center">
+          <Link to="/" aria-label="Go to homepage">
+            <img src={Logo} alt="Logoipsum logo" className="h-6"/>
           </Link>
           <div className="block md:hidden">
             <MobileNav/>
@@ -17,7 +17,7 @@ const Header = () => {
             <MainNav/>
           </div>
         </div>
-      </div>
+      </header>
   );
 };
 

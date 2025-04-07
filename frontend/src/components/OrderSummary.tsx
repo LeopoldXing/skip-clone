@@ -13,7 +13,10 @@ type Props = {
 
 const OrderSummary = ({ restaurant, cartItems, removeFromCart }: Props) => {
   const getTotalCost = () => {
-    const totalInPence = cartItems.reduce((total, cartItem) => total + cartItem.price * cartItem.quantity, 0);
+    const totalInPence = cartItems.reduce(
+        (total, cartItem) => total + cartItem.price * cartItem.quantity,
+        0
+    );
     const totalWithDelivery = totalInPence + restaurant.deliveryPrice;
     return (totalWithDelivery / 100).toFixed(2);
   };
@@ -27,18 +30,28 @@ const OrderSummary = ({ restaurant, cartItems, removeFromCart }: Props) => {
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-5">
-          {cartItems.map((item) => (
-              <div className="flex justify-between" key={item._id}>
-                <span>
-                  <Badge variant="outline" className="mr-2">{item.quantity}</Badge>
-                  {item.name}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Trash className="cursor-pointer" color="red" size={20} onClick={() => removeFromCart(item)}/>
-                  ${((item.price * item.quantity) / 100).toFixed(2)}
-                </span>
-              </div>
-          ))}
+          <ul className="space-y-4">
+            {cartItems.map((item) => (
+                <li className="flex justify-between" key={item._id}>
+              <span className="flex items-center">
+                <Badge variant="outline" className="mr-2" aria-hidden="true">
+                  {item.quantity}
+                </Badge>
+                {item.name}
+              </span>
+                  <span className="flex items-center gap-1">
+                <button
+                    onClick={() => removeFromCart(item)}
+                    aria-label={`Remove ${item.name} from order`}
+                    className="cursor-pointer focus:outline-none"
+                >
+                  <Trash color="red" size={20}/>
+                </button>
+                <span>${((item.price * item.quantity) / 100).toFixed(2)}</span>
+              </span>
+                </li>
+            ))}
+          </ul>
           <Separator/>
           <div className="flex justify-between">
             <span>Delivery</span>

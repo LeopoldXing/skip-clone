@@ -10,26 +10,34 @@ const MobileNav = () => {
 
   return (
       <Sheet>
-        <SheetTrigger>
-          <Menu className="text-orange-500"/>
+        <SheetTrigger aria-label="Open mobile navigation">
+          <Menu className="text-[c14e2a]" aria-hidden="true"/>
         </SheetTrigger>
-        <SheetContent className="space-y-3">
-          <SheetTitle>
+        <SheetContent
+            className="space-y-3"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="sheet-title"
+            aria-describedby="sheet-description"
+        >
+          <SheetTitle id="sheet-title">
             {isAuthenticated ? (
                 <span className="flex items-center font-bold gap-2">
-                  <CircleUserRound className="text-orange-500"/>
+              <CircleUserRound className="text-[c14e2a]" aria-hidden="true"/>
                   {user?.email}
-                </span>
+            </span>
             ) : (
                 <span>Welcome to Logoipsum</span>
             )}
           </SheetTitle>
           <Separator/>
-          <SheetDescription className="flex flex-col gap-4">
+          <SheetDescription id="sheet-description" className="flex flex-col gap-4">
             {isAuthenticated ? (
                 <MobileNavLinks/>
             ) : (
-                <Button className="flex-1 font-bold bg-orange-500" onClick={() => loginWithRedirect()}>Log In</Button>
+                <Button className="flex-1 font-bold bg-[#c14e2a]" onClick={() => loginWithRedirect()}>
+                  Log In
+                </Button>
             )}
           </SheetDescription>
         </SheetContent>

@@ -20,16 +20,13 @@ export type CartItem = {
 
 const RestaurantDetailPage = () => {
   useEffect(() => {
-    document.title = 'Restaurant Details'
+    document.title = 'Restaurant Details';
   }, []);
 
   const { restaurantId } = useParams();
   const { restaurant, isLoading } = useGetRestaurant(restaurantId);
   const { createCheckoutSession, isLoading: isCreatingCheckoutSession } = useCreateCheckoutSession();
 
-  /**
-   * try to recover the cart information from session storage
-   */
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     const storedCartItems = sessionStorage.getItem(`cartItems-${restaurantId}`);
     return storedCartItems ? JSON.parse(storedCartItems) : [];
@@ -38,15 +35,16 @@ const RestaurantDetailPage = () => {
   const addToCart = (menuItem: MenuItemType) => {
     setCartItems((prevCartItems) => {
       const existingCartItem = prevCartItems.find((cartItem) => cartItem._id === menuItem._id);
-
       let updatedCartItems;
-
       if (existingCartItem) {
-        updatedCartItems = prevCartItems.map((cartItem) => cartItem._id === menuItem._id
-            ? { ...cartItem, quantity: cartItem.quantity + 1 }
-            : cartItem);
+        updatedCartItems = prevCartItems.map((cartItem) =>
+            cartItem._id === menuItem._id
+                ? { ...cartItem, quantity: cartItem.quantity + 1 }
+                : cartItem
+        );
       } else {
-        updatedCartItems = [...prevCartItems,
+        updatedCartItems = [
+          ...prevCartItems,
           {
             _id: menuItem._id,
             name: menuItem.name,
@@ -55,35 +53,21 @@ const RestaurantDetailPage = () => {
           },
         ];
       }
-
-      /**
-       * store the cart information into session storage
-       */
       sessionStorage.setItem(`cartItems-${restaurantId}`, JSON.stringify(updatedCartItems));
-
       return updatedCartItems;
     });
   };
 
   const removeFromCart = (cartItem: CartItem) => {
     setCartItems((prevCartItems) => {
-      const updatedCartItems = prevCartItems.filter(
-          (item) => cartItem._id !== item._id
-      );
-
-      sessionStorage.setItem(
-          `cartItems-${restaurantId}`,
-          JSON.stringify(updatedCartItems)
-      );
-
+      const updatedCartItems = prevCartItems.filter((item) => cartItem._id !== item._id);
+      sessionStorage.setItem(`cartItems-${restaurantId}`, JSON.stringify(updatedCartItems));
       return updatedCartItems;
     });
   };
 
   const onCheckout = async (userFormData: UserFormData) => {
-    if (!restaurant) {
-      return;
-    }
+    if (!restaurant) return;
 
     const checkoutData = {
       cartItems: cartItems.map(cartItem => ({
@@ -106,33 +90,54 @@ const RestaurantDetailPage = () => {
   };
 
   if (isLoading || !restaurant) {
-    return "Loading...";
+    return <p role="status">Loading...</p>;
   }
 
   return (
-      <div className="flex flex-col gap-10">
-        <AspectRatio ratio={16 / 5}>
-          <img src={restaurant.imageUrl} className="rounded-md object-cover h-full w-full" alt='restaurant image'/>
-        </AspectRatio>
-        <div className="grid md:grid-cols-[4fr_2fr] gap-5 md:px-32">
-          <div className="flex flex-col gap-4">
-            <RestaurantInfoCard restaurant={restaurant}/>
-            <span className="text-2xl font-bold tracking-tight">Menu</span>
-            {restaurant.menuItems.map(menuItem => (
-                <MenuItem menuItem={menuItem} addToCart={() => addToCart(menuItem)} key={menuItem._id}/>
-            ))}
-          </div>
-
-          <div>
-            <Card>
-              <OrderSummary restaurant={restaurant} cartItems={cartItems} removeFromCart={removeFromCart}/>
-              <CardFooter>
-                <CheckoutButton disabled={cartItems.length === 0} onCheckout={onCheckout} isLoading={isCreatingCheckoutSession}/>
-              </CardFooter>
-            </Card>
+      <section role="main" aria-label="Restaurant Detail Page">
+        <div className="flex flex-col gap-10">
+          <AspectRatio ratio={16 / 5}>
+            <img
+                src={restaurant.imageUrl}
+                className="rounded-md object-cover h-full w-full"
+                alt={`${restaurant.restaurantName} image`}
+            />
+          </AspectRatio>
+          <div className="grid md:grid-cols-[4fr_2fr] gap-5 md:px-32">
+            <section aria-labelledby="restaurant-info-heading">
+              <h2 id="restaurant-info-heading" className="sr-only">
+                Restaurant Information
+              </h2>
+              <RestaurantInfoCard restaurant={restaurant}/>
+              <h3 id="menu-heading" className="text-2xl font-bold tracking-tight">
+                Menu
+              </h3>
+              <ul role="list" aria-labelledby="menu-heading" className="space-y-4">
+                {restaurant.menuItems.map(menuItem => (
+                    <li key={menuItem._id}>
+                      <MenuItem menuItem={menuItem} addToCart={() => addToCart(menuItem)}/>
+                    </li>
+                ))}
+              </ul>
+            </section>
+            <aside aria-labelledby="order-summary-heading">
+              <h2 id="order-summary-heading" className="sr-only">
+                Order Summary
+              </h2>
+              <Card>
+                <OrderSummary restaurant={restaurant} cartItems={cartItems} removeFromCart={removeFromCart}/>
+                <CardFooter>
+                  <CheckoutButton
+                      disabled={cartItems.length === 0}
+                      onCheckout={onCheckout}
+                      isLoading={isCreatingCheckoutSession}
+                  />
+                </CardFooter>
+              </Card>
+            </aside>
           </div>
         </div>
-      </div>
+      </section>
   );
 };
 

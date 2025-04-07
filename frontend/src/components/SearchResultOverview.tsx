@@ -7,12 +7,21 @@ type Props = {
 
 const SearchResultOverview = ({ total, city }: Props) => {
   return (
-      <div className="text-xl font-bold flex flex-col gap-3 justify-between lg:items-center lg:flex-row">
-        <span>
-          <span>{total} restaurants found in {city}</span>
-          <Link to='/' className="ml-1 text-sm font-semibold underline cursor-pointer text-blue-500">Change Location</Link>
-        </span>
-      </div>
+      <section
+          role="region"
+          aria-label="Search results overview"
+          className="text-xl font-bold flex flex-col gap-3 justify-between lg:items-center lg:flex-row"
+      >
+        <p>
+          {total} restaurants found in {city}{" "}
+          <Link
+              to="/"
+              className="ml-1 text-sm font-semibold underline cursor-pointer text-blue-500"
+          >
+            Change Location
+          </Link>
+        </p>
+      </section>
   );
 };
 

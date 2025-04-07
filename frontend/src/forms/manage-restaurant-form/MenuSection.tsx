@@ -11,16 +11,32 @@ const MenuSection = () => {
       <div className="space-y-2">
         <div>
           <h2 className="text-2xl font-bold">Menu</h2>
-          <FormDescription>Create your menu and give each item a name and a price</FormDescription>
+          <FormDescription>
+            Create your menu and give each item a name and a price
+          </FormDescription>
         </div>
-        <FormField control={control} name="menuItems" render={() => (
-            <FormItem className="flex flex-col gap-2">
-              {fields.map((_, index) => (
-                  <MenuItemInput index={index} removeMenuItem={() => remove(index)} key={_.id}/>
-              ))}
-            </FormItem>
-        )}/>
-        <Button type="button" onClick={() => append({ name: "", price: "" })}>Add Menu Item</Button>
+        <FormField
+            control={control}
+            name="menuItems"
+            render={() => (
+                <FormItem className="flex flex-col gap-2">
+                  <div role="list" className="flex flex-col gap-2">
+                    {fields.map((field, index) => (
+                        <div role="listitem" key={field.id}>
+                          <MenuItemInput index={index} removeMenuItem={() => remove(index)}/>
+                        </div>
+                    ))}
+                  </div>
+                </FormItem>
+            )}
+        />
+        <Button
+            type="button"
+            onClick={() => append({ name: "", price: "" })}
+            aria-label="Add menu item"
+        >
+          Add Menu Item
+        </Button>
       </div>
   );
 };

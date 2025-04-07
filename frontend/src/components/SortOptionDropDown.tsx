@@ -1,10 +1,5 @@
 import { Button } from "./ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, } from "./ui/dropdown-menu";
 
 type Props = {
   onChange: (value: string) => void;
@@ -33,14 +28,20 @@ const SortOptionDropdown = ({ onChange, sortOption }: Props) => {
 
   return (
       <DropdownMenu>
-        <DropdownMenuTrigger className="cursor-pointer">
+        <DropdownMenuTrigger className="cursor-pointer" aria-haspopup="menu">
           <Button variant="outline" className="w-full">
             Sort by: {selectedSortLabel}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent>
-          {SORT_OPTIONS.map(option => (
-              <DropdownMenuItem className="cursor-pointer" onClick={() => onChange(option.value)} key={option.value}>
+        <DropdownMenuContent role="menu">
+          {SORT_OPTIONS.map((option) => (
+              <DropdownMenuItem
+                  role="menuitemradio"
+                  aria-checked={option.value === sortOption}
+                  onClick={() => onChange(option.value)}
+                  key={option.value}
+                  className="cursor-pointer"
+              >
                 {option.label}
               </DropdownMenuItem>
           ))}

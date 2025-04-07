@@ -12,64 +12,78 @@ import { Button } from "@/components/ui/button.tsx";
 import { Restaurant } from "@/types.ts";
 import { useEffect } from "react";
 
-const formSchema = z.object({
-  restaurantName: z.string({
-    required_error: "Restaurant name is required"
-  }),
-  city: z.string({
-    required_error: "City is required"
-  }),
-  country: z.string({
-    required_error: "Country is required"
-  }),
-  deliveryPrice: z.coerce.number({
-    required_error: "DeliveryPrice is required",
-    invalid_type_error: "must be a valid number"
-  }),
-  estimatedDeliveryTime: z.coerce.number({
-    required_error: "Estimated delivery time is required",
-    invalid_type_error: "must be a valid number"
-  }),
-  cuisines: z.array(z.string()).nonempty({
-    message: "Please select at least one item"
-  }),
-  menuItems: z.array(z.object({
-    name: z.string().min(1, "name is required"),
-    price: z.coerce.number().min(1, "price is required")
-  })),
-  imageUrl: z.string().optional(),
-  imageFile: z.instanceof(File).optional()
-}).refine((data) => data.imageUrl || data.imageFile, { message: "Ether image URL or image file must be provided", path: ['imageFile'] })
+const formSchema = z
+    .object({
+      restaurantName: z.string({
+        required_error: "Restaurant name is required",
+      }),
+      city: z.string({
+        required_error: "City is required",
+      }),
+      country: z.string({
+        required_error: "Country is required",
+      }),
+      deliveryPrice: z.coerce.number({
+        required_error: "DeliveryPrice is required",
+        invalid_type_error: "must be a valid number",
+      }),
+      estimatedDeliveryTime: z.coerce.number({
+        required_error: "Estimated delivery time is required",
+        invalid_type_error: "must be a valid number",
+      }),
+      cuisines: z.array(z.string()).nonempty({
+        message: "Please select at least one item",
+      }),
+      menuItems: z.array(
+          z.object({
+            name: z.string().min(1, "name is required"),
+            price: z.coerce.number().min(1, "price is required"),
+          })
+      ),
+      imageUrl: z.string().optional(),
+      imageFile: z.instanceof(File).optional(),
+    })
+    .refine((data) => data.imageUrl || data.imageFile, {
+      message: "Either image URL or image file must be provided",
+      path: ["imageFile"],
+    });
 
 type RestaurantFormData = z.infer<typeof formSchema>;
 
 type ManageRestaurantFormProps = {
   onSave: (restaurantFormData: FormData) => void;
   isLoading: boolean;
-  defaultValue?: Restaurant
-}
-const ManageRestaurantForm = ({ onSave, isLoading = false, defaultValue: defaultRestaurant }: ManageRestaurantFormProps) => {
+  defaultValue?: Restaurant;
+};
+
+const ManageRestaurantForm = ({
+                                onSave,
+                                isLoading = false,
+                                defaultValue: defaultRestaurant,
+                              }: ManageRestaurantFormProps) => {
   const form = useForm<RestaurantFormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       cuisines: [],
-      menuItems: [{ name: "", price: 0 }]
-    }
-  })
+      menuItems: [{ name: "", price: 0 }],
+    },
+  });
 
   useEffect(() => {
     if (defaultRestaurant) {
-      const deliveryPriceFormatted = parseFloat((defaultRestaurant.deliveryPrice / 100).toFixed(2));
-      const menuItemFormatted = defaultRestaurant.menuItems.map(item => ({
+      const deliveryPriceFormatted = parseFloat(
+          (defaultRestaurant.deliveryPrice / 100).toFixed(2)
+      );
+      const menuItemFormatted = defaultRestaurant.menuItems.map((item) => ({
         ...item,
-        price: parseFloat((item.price / 100).toFixed(2))
+        price: parseFloat((item.price / 100).toFixed(2)),
       }));
 
       const updatedRestaurant = {
         ...defaultRestaurant,
         deliveryPrice: deliveryPriceFormatted,
-        menuItems: menuItemFormatted
-      }
+        menuItems: menuItemFormatted,
+      };
 
       form.reset(updatedRestaurant);
     }
@@ -81,25 +95,39 @@ const ManageRestaurantForm = ({ onSave, isLoading = false, defaultValue: default
     formData.append("restaurantName", formDataJson.restaurantName);
     formData.append("city", formDataJson.city);
     formData.append("country", formDataJson.country);
-    formData.append("deliveryPrice", (formDataJson.deliveryPrice * 100).toString());
-    formData.append("estimatedDeliveryTime", formDataJson.estimatedDeliveryTime.toString());
+    formData.append(
+        "deliveryPrice",
+        (formDataJson.deliveryPrice * 100).toString()
+    );
+    formData.append(
+        "estimatedDeliveryTime",
+        formDataJson.estimatedDeliveryTime.toString()
+    );
     formDataJson.cuisines.forEach((cuisine, index) => {
       formData.append(`cuisines[${index}]`, cuisine);
     });
     formDataJson.menuItems.forEach((menuItem, index) => {
       formData.append(`menuItems[${index}][name]`, menuItem.name);
-      formData.append(`menuItems[${index}][price]`, (menuItem.price * 100).toString());
+      formData.append(
+          `menuItems[${index}][price]`,
+          (menuItem.price * 100).toString()
+      );
     });
     if (formDataJson.imageFile) {
-      formData.append('imageFile', formDataJson.imageFile);
+      formData.append("imageFile", formDataJson.imageFile);
     }
 
     onSave(formData);
-  }
+  };
 
   return (
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 p-10 bg-gray-50 rounded-lg">
+        <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-8 p-10 bg-gray-50 rounded-lg"
+            aria-label="Manage Restaurant Form"
+        >
+          <h1 className="sr-only">Manage Restaurant Form</h1>
           <DetailsSection/>
           <Separator/>
           <CuisinesSection/>
@@ -107,7 +135,6 @@ const ManageRestaurantForm = ({ onSave, isLoading = false, defaultValue: default
           <MenuSection/>
           <Separator/>
           <ImageSection/>
-
           {isLoading ? <LoadingButton/> : <Button type="submit">Submit</Button>}
         </form>
       </Form>

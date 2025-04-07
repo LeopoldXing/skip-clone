@@ -10,12 +10,17 @@ type Props = {
 
 const Layout = ({ children, showHero = false }: Props) => {
   return (
-      <div className="flex flex-col min-h-screen">
+      <main className="flex flex-col min-h-screen">
+        <a href="#main-content" className="sr-only focus:not-sr-only">
+          Skip to content
+        </a>
         <Header/>
         {showHero && <Hero/>}
-        <div className="container mx-auto flex-1 py-10">{children}</div>
+        <section id="main-content" className="container mx-auto flex-1 py-10">
+          {children}
+        </section>
         <Footer/>
-      </div>
+      </main>
   );
 };
 
