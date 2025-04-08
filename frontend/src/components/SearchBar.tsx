@@ -59,7 +59,7 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
                     <Input
                         {...field}
                         id={`input-${field.name}`}
-                        className="border-none shadow-none text-xl focus-visible:ring-0"
+                        className="w-full border-none shadow-none text-xl focus-visible:ring-0"
                         placeholder={placeholder}
                         aria-label={placeholder}
                         aria-invalid={form.formState.errors.keyword ? "true" : "false"}
