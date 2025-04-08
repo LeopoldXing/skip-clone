@@ -17,11 +17,14 @@ Parameters:
     Description: "The password for the DocumentDB cluster master user."
     Type: String
     NoEcho: true
-  DomainName:
-    Description: "Domain name (e.g., skip-clone.example.com) that will later point to ALB"
+  FrontendDomainName:
+    Description: "Domain name (e.g., skip-clone.example.com) that will later point to Cloudfront distribution endpoint"
     Type: String
-  CertificateARN:
-    Description: "ARN for the corresponding SSL/TLS certificate, managed by ACM or IAM"
+  BackendCertificateARN:
+    Description: "ARN for the Backend subdomain name's SSL/TLS certificate, managed by ACM"
+    Type: String
+  FrontendCertificateARN:
+    Description: "ARN for the Frontend subdomain name's SSL/TLS certificate, managed by ACM"
     Type: String
 
 Resources:
@@ -333,8 +336,13 @@ Resources:
             ResponsePagePath: "/index.html"
             ResponseCode: 200
             ErrorCachingMinTTL: 300
+        Aliases:
+          - !Ref FrontendDomainName
         ViewerCertificate:
-          CloudFrontDefaultCertificate: true
+          CloudFrontDefaultCertificate: false
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+          AcmCertificateArn: !Ref FrontendCertificateARN
         PriceClass: PriceClass_100
 
   # ------------------------------
@@ -442,7 +450,7 @@ Resources:
         # ALB SSL Certificate
         - Namespace: "aws:elbv2:listener:443"
           OptionName: SSLCertificateArns
-          Value: !Ref CertificateARN
+          Value: !Ref BackendCertificateARN
         - Namespace: "aws:ec2:instances"
           OptionName: InstanceTypes
           Value: "t3.micro,t3.small"
