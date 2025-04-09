@@ -58,6 +58,7 @@ This project integrates Stripe to handle payments
 
 1. Go to [Stripe](https://stripe.com/en-ca) website and login
 2. Create an account in Test mode (without verifying the business)
+3. Create a webhook under this account
 
 #### 3.3 Cloudinary
 
