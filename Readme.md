@@ -1,152 +1,141 @@
-## How to run this project
+## How to Run the Project
 
-### 1. Clone the Project Repo
+### 1. Clone the Repository
 
-```cmd
+```shell
 git clone https://github.com/LeopoldXing/skip-clone.git
 cd skip-clone
 ```
 
-
-
 ### 2. Create Cloud Resources
 
-Before continue to this step, you need an AWS account and an IAM user to create all the resources.
+Before proceeding, ensure you have an AWS account and an IAM user with necessary permissions.
 
-Additionally, a [Route 53](https://us-east-1.console.aws.amazon.com/route53/v2/hostedzones?region=ca-central-1#) Hosted Zone, and one subdomain name for frontend, one subdomain name for backend endpoints, with corresponding SSL/TLS certificates managed by [AWS Certificate Manager](https://ca-central-1.console.aws.amazon.com/acm/home?region=ca-central-1#/welcome) (ACM) is needed to enable HTTPS trafficing.
+Additionally, you'll need:
+- A [Route 53 Hosted Zone](https://console.aws.amazon.com/route53)
+- Two subdomains (one for frontend, one for backend)
+- SSL/TLS certificates for these domains managed by [AWS Certificate Manager (ACM)](https://console.aws.amazon.com/acm)
 
-A cloudformation template can be found under **cloud-resources** folder, this template will create all the could resources needed:
+Use the provided CloudFormation template located in the **cloud-resources** folder. It creates all required resources.
 
-The template requires a few parameters:
+The template parameters are:
 
-| Name                       | Description                                                  | Example                         |
-| -------------------------- | ------------------------------------------------------------ | ------------------------------- |
-| **FrontendDomainName**     | Custom Domain name that will later point to Cloudfront distribution endpoint | skip-clone.example.com          |
-| **FrontendCertificateARN** | ARN for a SSL/TLS certificate of the domain name, managed by ACM, the certificate must be in **N. Virginia (us-east-1)** region. |                                 |
-| **BackendCertificateARN**  | ARN for a SSL/TLS certificate of the domain name, managed by ACM, the certificate can be in any regions. |                                 |
-| **DBUsername**             | The username for the DocumentDB cluster master user.         | leopold                         |
-| **DBPassword**             | The password for the DocumentDB cluster master user.         |                                 |
-| **S3BucketName**           | The name for S3 bucket, it must be globally unique           | skip-clone-frontend-hosting-123 |
+| Parameter Name             | Description                                                            | Example                            |
+|----------------------------|------------------------------------------------------------------------|------------------------------------|
+| **FrontendDomainName**     | Domain name pointing to the CloudFront distribution                    | skip-clone.example.com             |
+| **FrontendCertificateARN** | ARN of the ACM certificate (must be in **us-east-1** region)           |                                    |
+| **BackendCertificateARN**  | ARN of the ACM certificate (can be in any region)                      |                                    |
+| **DBUsername**             | Master username for DocumentDB                                         | leopold                            |
+| **DBPassword**             | Master password for DocumentDB                                         |                                    |
+| **S3BucketName**           | Globally unique name for S3 bucket                                     | skip-clone-frontend-hosting-123    |
 
-After submitting the template via [AWS Cloudformation](https://ca-central-1.console.aws.amazon.com/cloudformation/home?region=ca-central-1#/stacks?filteringText=&filteringStatus=active&viewNested=true) console or AWS CLI, the creation process might take up to 15 min to complete.
+After submitting the template via [AWS CloudFormation](https://console.aws.amazon.com/cloudformation) or AWS CLI, resource creation may take up to 15 minutes.
 
-
-
-### 3. Create 3rd-party Integration Accounts
+### 3. Third-party Integrations
 
 #### 3.1 Auth0
 
-This project integrates Auth0 as an identity provider.
+This project uses Auth0 for authentication:
 
-1. Go to [Auth0](https://auth0.com/) website and create an account.
+1. Create an account at [Auth0](https://auth0.com/).
+2. After logging in, create a new application with type **Single Page Web Application**.
+3. Set the frontend domain name to Auth0 application settings for:
+   - Allowed Callback URLs (`https://` prefix)
+   - Allowed Logout URLs (`https://` prefix)
+   - Allowed Web Origins (`https://` prefix)
 
-2. After login, create a new application, select "Single Page Web Applications".
-
-3. In [AWS Cloudfront](https://us-east-1.console.aws.amazon.com/cloudfront/v4/home?region=us-east-1#/distributions) console, select the newly created distribution via Cloudformation template and copy "Distribution domain name", then paste it in following fields in Application settings of Auth0 with "http://" at the front:
-
-   - "Allowed Callback URLs"
-   - "Allowed Logout URLs"
-   - "Allowed Web Origins"
-
-   Then save changes
-
-4. On the left side, under "Applications" menu, create a new API
+4. Create a new API in the Auth0 dashboard.
 
 #### 3.2 Stripe
 
-This project integrates Stripe to handle payments
+Stripe handles payments:
 
-1. Go to [Stripe](https://stripe.com/en-ca) website and login
-2. Create an account in Test mode (without verifying the business)
-3. Create a webhook under this account
+1. Log into [Stripe](https://stripe.com/) and create an account.
+2. Set up a webhook with path `/api/order/checkout/webhook`.
 
 #### 3.3 Cloudinary
 
-This project uses [Cloudinary](https://cloudinary.com/) to host images
-
-
+Create a [Cloudinary](https://cloudinary.com/) account for image hosting.
 
 ### 4. Deployment
 
-#### 4.1 Backend deployment
+#### 4.1 Backend
 
-Under the project folder "backend":
+Navigate to the `backend` directory:
 
-1. Open the config file **`02-env-variables.config`** under **`.ebextensions`** folder.
+1. Edit environment variables in `backend/.ebextensions/02-env-variables.config`:
 
-2. Set following environment variables:
+   | Variable Name                  | Description                                 | Example                            |
+   | ------------------------------ | ------------------------------------------- | ---------------------------------- |
+   | **AUTH0_AUDIENCE**             | API identifier from Auth0                   | skip-clone-api                     |
+   | **AUTH0_ISSUER_BASE_URL**      | Auth0 domain URL                            | `https://dev-******.auth0.com`     |
+   | **CLOUDINARY_API_KEY**         | From Cloudinary settings                    |                                    |
+   | **CLOUDINARY_API_SECRET**      | From Cloudinary settings                    |                                    |
+   | **CLOUDINARY_CLOUD_NAME**      | Cloudinary dashboard                        |                                    |
+   | **FRONTEND_URL**               | Frontend domain URL                         | `https://skip-clone.example.com`   |
+   | **MONGODB_CONNECT_STRING**     | DocumentDB connection string                |                                    |
+   | **DB_CONNECTION_TLS_ENABLED**  | `true` to enable TLS                        |                                    |
+   | **DB_CONNECTION_CA_FILE_PATH** | CA file path if TLS enabled                 | `/etc/ssl/certs/global-bundle.pem` |
+   | **STRIPE_SECRET_KEY**          | From Stripe developer dashboard (test mode) |                                    |
+   | **STRIPE_WEBHOOK_SECRET**      | From Stripe webhook settings                |                                    |
 
-   | Name                           | Description                                                  | Example                            |
-   | ------------------------------ | ------------------------------------------------------------ | ---------------------------------- |
-   | **AUTH0_AUDIENCE**             | The `identifier` of your API in Auth0, it can be found under the API Settings. | skip-clone-api                     |
-   | **AUTH0_ISSUER_BASE_URL**      | The URL for the Auth0 Application domain, it can be found under the Auth0 application settings / quickstart | `https://dev-**********.auth0.com` |
-   | **CLOUDINARY_API_KEY**         | Cloudinary api key, it can be found in Cloudinary settings   |                                    |
-   | **CLOUDINARY_API_SECRET**      | Cloudinary api secret, it can be found in Cloudinary settings |                                    |
-   | **CLOUDINARY_CLOUD_NAME**      | Cloudinary cloud name, it can be found in Cloudinary dashboard | dggh4k2aa                          |
-   | **FRONTEND_URL**               | The URL for the website                                      | `https://skip-clone.example.com`   |
-   | **MONGODB_CONNECT_STRING**     | The connection string for the database, it can be found in [Amazon Document DB](https://ca-central-1.console.aws.amazon.com/docdb/home?region=ca-central-1#clusters) console. |                                    |
-   | **DB_CONNECTION_TLS_ENABLED**  | 'true' to enable tls connection                              |                                    |
-   | **DB_CONNECTION_CA_FILE_PATH** | if enable tls connection, set the path to the ca file        | `/etc/ssl/certs/global-bundle.pem` |
-   | **STRIPE_SECRET_KEY**          | Stripe secret key, it can be found in the developers section of Stripe Test account |                                    |
-   | **STRIPE_WEBHOOK_SECRET**      | Stripe webhook secrect, it can be found in Webhook section of Stripe Test account |                                    |
+2. Update the domain name in `backend/.platform/nginx/conf.d/skip-clone.conf`.
 
-3. Go to `backend/.platform/nginx/conf.d` folder, in `skip-clone.conf` file, replace the example domain with your frontend domain name.
-
-4. Build the project
+3. Build the backend:
 
    ```shell
    npm install
    npm run build
    ```
 
-5. Zip the files inside `backend` folder, please make sure the files under `backend`  folder are directly compressed together, not included in any folders.
+4. Compress backend files (ensure no nested folders):
 
    ```shell
    zip -r application.zip . -x "*.git*" "node_modules/*" "test/*" "__MACOSX/*"
    ```
 
-6. Go to [AWS ElasticBeanstalk](https://ca-central-1.console.aws.amazon.com/elasticbeanstalk/home?region=ca-central-1#/applications) console, go into **`skip-clone-backend`** application, **`skip-clone-backend-prod`** environment, then upload the compressed file by clicking "Upload and deploy" button on the top right.
+5. Deploy to AWS Elastic Beanstalk:
+   
+   Go to [Elastic Beanstalk](https://console.aws.amazon.com/elasticbeanstalk), select the **skip-clone-backend** application, **skip-clone-backend-prod** environment, and use "Upload and deploy".
+   
+6. Update DNS:
+   - Copy the Elastic Load Balancer DNS name from [AWS EC2 Console](https://console.aws.amazon.com/ec2).
+   - Update backend subdomain in Route 53 with a CNAME pointing to the Elastic Beanstalk environment URL.
 
-7. In [AWS EC2](https://ca-central-1.console.aws.amazon.com/ec2/home?region=ca-central-1#LoadBalancers:) console, copy the application load balancer DNS name. In [Route 53](https://us-east-1.console.aws.amazon.com/route53/v2/home?region=ca-central-1#Dashboard) console, set the backend record to `CNAME`, and set the value to the ElasticBeanstalk environment address.
+#### 4.2 Frontend
 
-#### 4.2 Frontend deployment
+Navigate to the `frontend` directory:
 
-Under the project folder "frontend":
-
-1. Copy the `.env.example` file and rename it to `.env`
+1. Configure environment variables:
 
    ```shell
    cp .env.example .env
    ```
 
-2. Set the environment variables:
+   Edit `.env` file with:
 
-   | Name                        | Description                                                  | Example                                       |
-   | --------------------------- | ------------------------------------------------------------ | --------------------------------------------- |
-   | **VITE_AUTH0_DOMAIN**       | Auth0 Application domain, it can be found under the Auth0 application settings / quickstart | `dev-**********.auth0.com`                    |
-   | **VITE_AUTH0_CLIENT_ID**    | The client id of Auth0 application, it can be found in application settings |                                               |
-   | **VITE_AUTH0_CALLBACK_URL** | The website URL, must be the same as the URL set in "Allowed Callback URLs" | `https://skip-clone.leopoldhsing.com`         |
-   | **VITE_AUTH0_AUDIENCE**     | The `identifier` of your API in Auth0, it can be found under the API Settings. | skip-clone-api                                |
-   | **VITE_API_BASE_URL**       | The backend endpoint                                         | `https://skip-clone-backend.leopoldhsing.com` |
+   | Variable Name                | Description                                         | Example                                     |
+      |------------------------------|-----------------------------------------------------|---------------------------------------------|
+   | **VITE_AUTH0_DOMAIN**        | Auth0 domain                                        | `dev-******.auth0.com`                      |
+   | **VITE_AUTH0_CLIENT_ID**     | Auth0 client ID                                     |                                             |
+   | **VITE_AUTH0_CALLBACK_URL**  | Same URL as Auth0 callback setting                  | `https://skip-clone.example.com`            |
+   | **VITE_AUTH0_AUDIENCE**      | API identifier from Auth0                           | skip-clone-api                              |
+   | **VITE_API_BASE_URL**        | Backend endpoint URL                                | `https://skip-clone-backend.example.com`    |
 
-3. Build the project
+2. Build frontend:
 
    ```shell
    npm install
    npm run build
    ```
 
-4. Upload to S3
+3. Upload contents of `dist` to the frontend S3 bucket via [AWS S3 Console](https://console.aws.amazon.com/s3) or AWS CLI.
 
-   Upload everything under `dist` folder to the frontend bucket via [AWS S3](https://ca-central-1.console.aws.amazon.com/s3/home?region=ca-central-1#) console or AWS CLI.
-
-5. Set frontend domain name to Cloudfront Distribution endpoint
-
-   Go to AWS Cloudfront console, copy the Distribution domain name. Then in the AWS Route 53 console, set the frontend domain record to the distribution domain name.
-
-
+4. Update Route 53 DNS:
+   
+   Set frontend subdomain to the CloudFront distribution URL.
 
 ### 5. Clean Up
 
-1. Go to [AWS Cloudformation](https://ca-central-1.console.aws.amazon.com/cloudformation/home?region=ca-central-1#/stacks?filteringText=&filteringStatus=active&viewNested=true) console, select the stack for this project, and click "delete".
-2. Go to [AWS S3](https://ca-central-1.console.aws.amazon.com/s3/home?region=ca-central-1) console, select the S3 bucket created by the template, empty the bucket, then manually delete the bucket.
+1. Delete the CloudFormation stack via [AWS CloudFormation](https://console.aws.amazon.com/cloudformation).
+2. Empty and delete the S3 bucket manually via [AWS S3 Console](https://console.aws.amazon.com/s3).
