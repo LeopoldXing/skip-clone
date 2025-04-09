@@ -22,3 +22,7 @@ function copyDir(src, dest) {
 if (fs.existsSync('.platform')) {
   copyDir('.platform', 'dist/.platform');
 }
+
+if (fs.existsSync('.ebextensions')) {
+  copyDir('.ebextensions', 'dist/.ebextensions');
+}

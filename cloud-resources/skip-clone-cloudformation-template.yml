@@ -315,11 +315,9 @@ Resources:
             S3OriginConfig: { }
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
-          ViewerProtocolPolicy: redirect-to-https
+          ViewerProtocolPolicy: allow-all
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # cache optimized
           AllowedMethods:
-            - GET
-            - HEAD
-          CachedMethods:
             - GET
             - HEAD
           ForwardedValues:
@@ -339,7 +337,6 @@ Resources:
         Aliases:
           - !Ref FrontendDomainName
         ViewerCertificate:
-          CloudFrontDefaultCertificate: false
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
           AcmCertificateArn: !Ref FrontendCertificateARN

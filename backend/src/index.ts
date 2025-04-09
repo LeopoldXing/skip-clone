@@ -15,14 +15,26 @@ let connectionString = process.env.MONGODB_CONNECT_STRING;
 if (!connectionString) {
   connectionString = `mongodb://${process.env.MONGODB_ROOT_USERNAME}:${process.env.MONGODB_ROOT_PASSWORD}@${process.env.MONGODB_HOST}:${process.env.MONGODB_PORT}/`
 }
-mongoose.connect(connectionString as string).then(() => console.log("Connected to database!"))
+
+const tlsEnabled = process.env.DB_CONNECTION_TLS_ENABLED === 'true';
+const connectionOptions: mongoose.ConnectOptions = {
+  tls: tlsEnabled
+};
+
+if (tlsEnabled && process.env.DB_CONNECTION_CA_FILE_PATH) {
+  connectionOptions.tlsCAFile = process.env.DB_CONNECTION_CA_FILE_PATH;
+}
+
+mongoose.connect(connectionString as string, connectionOptions)
+    .then(() => console.log("Connected to database!"))
+    .catch(err => console.error("Database connection error:", err));
 
 // 3. cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
-})
+});
 
 const app = express();
 app.use(cors());
@@ -35,11 +47,13 @@ app.use(express.json());
 // health check
 app.get("/", async (req: Request, res: Response) => {
   res.send({ message: '200 OK' });
-})
+});
 
 app.use("/api/my/user/", myUserRoute);
 app.use("/api/my/restaurant", myRestaurantRoute);
 app.use("/api/restaurant", RestaurantRoute);
 app.use("/api/order", OrderRoute);
 
-app.listen(process.env.BACKEND_PORT || 8080, () => console.log(`Server is running on port ${process.env.BACKEND_PORT || 8080}.`));
+app.listen(process.env.BACKEND_PORT || 8080, () =>
+    console.log(`Server is running on port ${process.env.BACKEND_PORT || 8080}.`)
+);
