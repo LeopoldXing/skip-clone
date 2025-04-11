@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  This template must be deployed in us-east-1 region.
+  This template creates an AWS WAF v2 WebACL (for CloudFront),
+  it uses AWS Managed Rules (Common Rule Set) for baseline protection.
+
+Resources:
+  WebACL:
+    Type: AWS::WAFv2::WebACL
+    Properties:
+      Name: SkipCloneWebACL
+      Scope: CLOUDFRONT
+      DefaultAction:
+        Allow: { }
+      VisibilityConfig:
+        CloudWatchMetricsEnabled: true
+        MetricName: SkipCloneWebACL
+        SampledRequestsEnabled: true
+      Rules:
+        - Name: AWSManagedRulesCommonRuleSet
+          Priority: 1
+          OverrideAction:
+            None: { }
+          Statement:
+            ManagedRuleGroupStatement:
+              VendorName: AWS
+              Name: AWSManagedRulesCommonRuleSet
+          VisibilityConfig:
+            CloudWatchMetricsEnabled: true
+            MetricName: AWSManagedRulesCommonRuleSet
+            SampledRequestsEnabled: true
+
+Outputs:
+  WebACLArn:
+    Description: "ARN of the created WAF WebACL"
+    Value: !GetAtt WebACL.Arn

@@ -23,6 +23,9 @@ Parameters:
   CertificateARN:
     Description: "ARN for the website domain name's SSL/TLS certificate, must be in us-east-1 region, must be managed by ACM"
     Type: String
+  WAFArn:
+    Description: "ARN for the AWS WAF v2 WebACL created in us-east-1 for protecting CloudFront distribution."
+    Type: String
 
 Resources:
   # ------------------------------
@@ -350,6 +353,7 @@ Resources:
             ErrorCachingMinTTL: 300
         Aliases:
           - !Ref DomainName
+        WebACLId: !Ref WAFArn
         ViewerCertificate:
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
