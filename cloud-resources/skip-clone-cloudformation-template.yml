@@ -17,14 +17,11 @@ Parameters:
     Description: "The password for the DocumentDB cluster master user."
     Type: String
     NoEcho: true
-  FrontendDomainName:
+  DomainName:
     Description: "Domain name (e.g., skip-clone.example.com) that will later point to Cloudfront distribution endpoint"
     Type: String
-  BackendCertificateARN:
-    Description: "ARN for the Backend subdomain name's SSL/TLS certificate, managed by ACM"
-    Type: String
-  FrontendCertificateARN:
-    Description: "ARN for the Frontend subdomain name's SSL/TLS certificate, managed by ACM"
+  CertificateARN:
+    Description: "ARN for the website domain name's SSL/TLS certificate, must be in us-east-1 region, must be managed by ACM"
     Type: String
 
 Resources:
@@ -313,6 +310,23 @@ Resources:
             DomainName: !GetAtt FrontendBucket.RegionalDomainName
             OriginAccessControlId: !Ref CloudFrontOAC
             S3OriginConfig: { }
+          - Id: BackendAPI
+            DomainName: !GetAtt BackendEnvironment.EndpointURL
+            CustomOriginConfig:
+              OriginProtocolPolicy: http-only
+        CacheBehaviors:
+          - PathPattern: /api/*
+            TargetOriginId: BackendAPI
+            ViewerProtocolPolicy: allow-all
+            AllowedMethods:
+              - GET
+              - HEAD
+              - OPTIONS
+              - PUT
+              - PATCH
+              - POST
+              - DELETE
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # cache disabled
         DefaultCacheBehavior:
           TargetOriginId: S3Origin
           ViewerProtocolPolicy: allow-all
@@ -335,11 +349,11 @@ Resources:
             ResponseCode: 200
             ErrorCachingMinTTL: 300
         Aliases:
-          - !Ref FrontendDomainName
+          - !Ref DomainName
         ViewerCertificate:
           SslSupportMethod: sni-only
           MinimumProtocolVersion: TLSv1.2_2021
-          AcmCertificateArn: !Ref FrontendCertificateARN
+          AcmCertificateArn: !Ref CertificateARN
         PriceClass: PriceClass_100
 
   # ------------------------------
@@ -437,17 +451,6 @@ Resources:
         - Namespace: "aws:ec2:vpc"
           OptionName: ELBSubnets
           Value: !Join [ ",", [ !Ref PublicSubnet1, !Ref PublicSubnet2, !Ref PublicSubnet3 ] ]
-        # ALB Https listener
-        - Namespace: "aws:elbv2:listener:443"
-          OptionName: ListenerEnabled
-          Value: "true"
-        - Namespace: "aws:elbv2:listener:443"
-          OptionName: Protocol
-          Value: "HTTPS"
-        # ALB SSL Certificate
-        - Namespace: "aws:elbv2:listener:443"
-          OptionName: SSLCertificateArns
-          Value: !Ref BackendCertificateARN
         - Namespace: "aws:ec2:instances"
           OptionName: InstanceTypes
           Value: "t3.micro,t3.small"
