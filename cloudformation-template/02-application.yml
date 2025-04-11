@@ -1,10 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  CloudFormation template for establishing the cloud resources of skip-clone application.
-  It creates a VPC with three public and three private subnets across three AZs for high availability,
+  CloudFormation template for creating the cloud resources of skip-clone application.
+  It creates a VPC with three public and three private subnets across three AZs,
   a S3 bucket with CloudFront distribution (via OAC) for frontend hosting,
   an Elastic Beanstalk application and environment for deploying backend application,
   and deploys an Amazon DocumentDB cluster (3 instances for high availability) as database.
+  This template can be deployed in any region.
+  This template must be deployed after 01-waf.yml template.
 
 Parameters:
   S3BucketName:

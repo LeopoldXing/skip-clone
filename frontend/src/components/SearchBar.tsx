@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Form, FormControl, FormField, FormItem } from "@/components/ui/form.tsx";
+import { Form, FormControl, FormField } from "@/components/ui/form.tsx";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
@@ -43,9 +43,9 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
             onSubmit={form.handleSubmit(onSubmit)}
             role="search"
             aria-label="Search form"
-            className={`flex items-center gap-3 justify-between flex-row border-2 rounded-full p-3 ${form.formState.errors.keyword && "border-red-500"}`}
+            className={`flex items-center justify-center border-2 rounded-full p-2 ${form.formState.errors.keyword && "border-red-500"}`}
         >
-          <div className="flex justify-start items-center gap-1">
+          <div className="flex flex-1 justify-start items-center gap-1">
             <Search
                 strokeWidth={2.5}
                 size={30}
@@ -53,19 +53,19 @@ const SearchBar = ({ onSubmit, placeholder, onReset, keyword }: Props) => {
                 aria-hidden="true"
             />
             <FormField control={form.control} name='keyword' render={({ field }) => (
-                <FormItem>
+                <>
                   <label className="sr-only" htmlFor={`input-${field.name}`}>Search</label>
                   <FormControl>
                     <Input
                         {...field}
                         id={`input-${field.name}`}
-                        className="w-full border-none shadow-none text-xl focus-visible:ring-0"
+                        className="w-full border-none shadow-none text-xl focus-visible:ring-0 self-center"
                         placeholder={placeholder}
                         aria-label={placeholder}
                         aria-invalid={form.formState.errors.keyword ? "true" : "false"}
                     />
                   </FormControl>
-                </FormItem>
+                </>
             )}/>
           </div>
           <div className="flex items-center justify-end gap-2">
