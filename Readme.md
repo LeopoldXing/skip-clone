@@ -22,7 +22,7 @@ You will also need:
 1. `01-waf.yml` (must be deployed in **us-east-1**) – creates an [AWS WAF Web ACL](https://us-east-1.console.aws.amazon.com/wafv2/homev2/home?region=us-east-1#/).
 2. `02-application.yml` (can be deployed to any region) – provisions all application-related resources.
 
-[Learn more about these templates.](https://blogs.leopoldhsing.com/skip-clone/#Infrastructure-as-Code)
+[Learn more about these templates.](https://blogs.leopoldhsing.com/skip-clone/#IaC)
 
 Parameters for `02-application.yml`:
 
