@@ -1,3 +1,5 @@
+[Full documentation](https://blogs.leopoldhsing.com/skip-clone/)
+
 ## How to Run the Project
 
 ### 1. Clone the Repository
